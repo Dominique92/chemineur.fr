@@ -1,0 +1,28 @@
+//BEST CHEMINEUR
+================
+Voir forum Evolutions & bugs sur chemineur.fr
+Purger la base des liens photos externes
+Permutations POSTS dans le template modération : déplacer les fichiers la permutation des posts => event/mcp_topic_postrow_post_before.html
+Ne pas afficher les points en doublon (flux wri, prc, c2c)
+Stockage images sur plus d'1 répertoire => ? plugin ?
+Mettre les media print dans print.css
+Pouvoir inclure : Les caractères ( ) sont interdits dans les URLs, il faut les remplacer respectivement par %28 et %29
+Erreur type de caractères randos Lozerre
+Récup trace diaporamas + chemins chem2
+EDIT.log => Trace supprimer le sujet
+Améliorer référencement (-> Prat communal !)
+ext/GeoBB : ajouter les coordonnées au template print
+Ajouter bouton permutation sur page point chem
+	View film + permutation
+coordonnéés V2 ? WRI: http://chemineur.fr/point/prc618
+BUG http://www.refuges.info/point/4965/ => http://chemineur.fr/point/20110623090825
+CHEMINEUR => http://jean.louis.negre.free.fr/indebaug.htm
+Carte pour 1 forum (aéroport, … ?)
+?? Les pictos ont disparu sur V3
+?? Click sur une icone chem2 plante
+
+//BEST AIDE CHEM
+Un sujet est actif quand il y a eu des contributions récentes.
+Création / Edition de traces
+Ici, la COPPA est la "Children's Online Privacy Protection Act", une loi américaine pour protéger la vie privée des mineurs de moins de 13 ans. J'essayerai d'enlever les mentions dans les formulaires.
+Consulter l'historique des éditions

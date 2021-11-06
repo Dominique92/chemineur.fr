@@ -1,0 +1,13 @@
+services:
+    Dominique92.Chemineur.listener:
+        class: Dominique92\Chemineur\event\listener
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '@request'
+            - '@template'
+            - '@user'
+            - '@auth'
+            - '@language'
+        tags:
+            - { name: event.listener }

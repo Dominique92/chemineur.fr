@@ -1,0 +1,15 @@
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="OpenLayers">
+<rte>
+	<rtept lat="48.85657" lon="2.35184"/>
+	<rtept lat="48.85594" lon="2.35153"/>
+	<rtept lat="48.85606" lon="2.35102"/>
+	<rtept lat="48.8559" lon="2.35088"/>
+	<rtept lat="48.85583" lon="2.35094"/>
+	<rtept lat="48.85333" lon="2.34905"/>
+	<rtept lat="48.85373" lon="2.3478"/>
+	<rtept lat="48.85407" lon="2.34758"/>
+	<rtept lat="48.85414" lon="2.34737"/>
+	<rtept lat="48.85477" lon="2.34772"/>
+	<rtept lat="48.85547" lon="2.34582"/>
+</rte>
+</gpx>

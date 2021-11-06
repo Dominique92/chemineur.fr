@@ -1,0 +1,8 @@
+services:
+    Dominique92.VTTrack.listener:
+        class: Dominique92\VTTrack\event\listener
+        arguments:
+            - '@dbal.conn'
+            - '@request'
+        tags:
+            - { name: event.listener }

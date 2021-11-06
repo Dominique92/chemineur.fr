@@ -1,0 +1,48 @@
+<table class="postit">
+	<!-- IF postrow.MESSAGE or postrow.POST_SUBJECT_OPTIM -->
+		<tr><td class="thg"></td><td class="thm"></td><td class="thd"></td></tr>
+
+		<tr><td class="tmg"></td><td class="tmm">
+			<!-- IF postrow.POST_SUBJECT_OPTIM -->
+				<p class="titre">{postrow.POST_SUBJECT_OPTIM}</p>
+			<!-- ENDIF -->
+			<p>{postrow.MESSAGE}</p>
+		</td><td class="tmd"></td></tr>
+
+		<tr><td class="tbg"></td><td class="tbm">
+			<span>
+				&copy; {postrow.POST_AUTHOR} / {postrow.POST_DATE}
+			</span>
+		</td><td class="tbd"></td></tr>
+	<!-- ENDIF -->
+
+	<!-- IF not S_IS_BOT -->
+		<tr><td colspan="2">
+			<div class="postbody" style="width:203px">
+				<ul class="post-buttons">
+					<!-- IF postrow.U_EDIT -->
+						<li>
+							<a href="{postrow.U_EDIT}" title="{L_EDIT_POST}" class="button button-icon-only">
+								<i class="icon fa-pencil fa-fw" aria-hidden="true"></i><span class="sr-only">{L_BUTTON_EDIT}</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+					<!-- IF postrow.U_DELETE and postrow.POST_ID != TOPIC_FIRST_POST_ID -->
+						<li>
+							<a href="{postrow.U_DELETE}" title="{L_DELETE_POST}" class="button button-icon-only">
+								<i class="icon fa-times fa-fw" aria-hidden="true"></i><span class="sr-only">{L_BUTTON_DELETE}</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+					<!-- IF postrow.U_QUOTE and S_USER_LOGGED_IN -->
+						<li>
+							<a href="{postrow.U_QUOTE}" title="{L_REPLY_WITH_QUOTE}" class="button button-icon-only">
+								<i class="icon fa-quote-left fa-fw" aria-hidden="true"></i><span class="sr-only">{L_BUTTON_QUOTE}</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+				</ul>
+			</div>
+		</td></tr>
+	<!-- ENDIF -->
+</table>

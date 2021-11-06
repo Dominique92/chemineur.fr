@@ -1,0 +1,33 @@
+<!-- IF MAP_TYPE and GEO_JSON -->
+	<style>
+	/* Need to be there to overlap GeoBB stylesheet.css */
+	@media screen and (min-width: 600px) {
+		#map {
+			float: right;
+			height: 50vw;
+			width: 50vw;
+			padding: 0;
+		}
+	}
+	@media screen and (max-width: 600px) {
+		#map {
+			/* Important freeze jQuery.ui.resizable */
+			width: 100vw !important;
+			padding: 0;
+		}
+	}
+	</style>
+
+	<div id="map"></div>
+	<input type="hidden" id="geo_json" value='{GEO_JSON}' />
+	<p id="point-marker"></p>
+
+	<!-- IF U_MCP -->
+		<a class="edit-button"
+			href="posting.php?mode=edit&f={FORUM_ID}&p={TOPIC_FIRST_POST_ID}"
+			title="Modifier l'entête de la fiche" class="button button-icon-only">
+			<i class="icon fa-pencil fa-fw" aria-hidden="true"></i>
+			<span class="sr-only">{L_BUTTON_EDIT}</span>
+		</a>
+	<!-- ENDIF -->
+<!-- ENDIF -->

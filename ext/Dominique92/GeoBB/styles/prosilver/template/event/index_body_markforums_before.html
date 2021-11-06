@@ -1,0 +1,28 @@
+<script>
+	var controlOptions = {
+		controlPermalink: {
+			display: true,
+		},
+	};
+</script>
+
+<style>
+/* Need to be there to overlap GeoBB stylesheet.css */
+@media screen and (min-width: 600px) {
+	#map {
+		float: right;
+		height: 50vw;
+		width: 50vw;
+		padding: 0;
+	}
+}
+@media screen and (max-width: 600px) {
+	#map {
+		/* Important freeze jQuery.ui.resizable */
+		width: 100vw !important;
+		padding: 0;
+	}
+}
+</style>
+
+<div id="map"></div>

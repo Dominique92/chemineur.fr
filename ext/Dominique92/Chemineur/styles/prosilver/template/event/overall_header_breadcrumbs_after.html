@@ -1,0 +1,109 @@
+<!-- IF not S_REGISTERED_USER -->
+	<li class="rightside"  data-skip-responsive="true">
+		<a href="{U_LOGIN_LOGOUT}" title="{L_LOGIN_LOGOUT}" accesskey="x" role="menuitem">
+			<i class="icon fa-power-off fa-fw" aria-hidden="true"></i><span>{L_LOGIN_LOGOUT}</span>
+		</a>
+	</li>
+	<!-- IF S_REGISTER_ENABLED and not (S_SHOW_COPPA or S_REGISTRATION) -->
+		<li class="rightside" data-skip-responsive="true">
+			<a href="{U_REGISTER}" role="menuitem">
+				<i class="icon fa-pencil-square-o  fa-fw" aria-hidden="true"></i><span>{L_REGISTER}</span>
+			</a>
+		</li>
+	<!-- ENDIF -->
+
+<!-- ELSE IF not S_IS_BOT -->
+	<!-- Menu déroulant connexion et fonctions users -->
+	<li id="username_logged_in" class="rightside" data-skip-responsive="true">
+		<div class="menu-container">
+			<a class="header-avatar">{CURRENT_USERNAME_SIMPLE}</a>
+			<div class="sub-menu">
+				<ul class="menu-contents">
+					<!-- IF U_RESTORE_PERMISSIONS -->
+						<li>
+							<a href="{U_RESTORE_PERMISSIONS}">
+								<i class="icon fa-refresh fa-fw" aria-hidden="true"></i><span>{L_RESTORE_PERMISSIONS}</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+
+					<li>
+						<a href="{U_PROFILE}" title="{L_PROFILE}" role="menuitem">
+							<i class="icon fa-sliders fa-fw" aria-hidden="true"></i><span>{L_PROFILE}</span>
+						</a>
+					</li>
+
+					<!-- IF U_USER_PROFILE -->
+						<li>
+							<a href="{U_USER_PROFILE}" title="{L_READ_PROFILE}" role="menuitem">
+								<i class="icon fa-user fa-fw" aria-hidden="true"></i><span>{L_READ_PROFILE}</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+
+					<!-- IF S_DISPLAY_PM -->
+						<li class="rightside" data-skip-responsive="true">
+							<a href="{U_PRIVATEMSGS}" role="menuitem">
+								<i class="icon fa-inbox fa-fw" aria-hidden="true"></i><span>{L_PRIVATE_MESSAGES} </span><strong class="badge<!-- IF not PRIVATE_MESSAGE_COUNT --> hidden<!-- ENDIF -->">{PRIVATE_MESSAGE_COUNT}</strong>
+							</a>
+						</li>
+					<!-- ENDIF -->
+
+					<!-- IF S_NOTIFICATIONS_DISPLAY -->
+						<li class="menu-container" data-skip-responsive="true">
+							<a href="{U_VIEW_ALL_NOTIFICATIONS}" id="notification_list_button">
+								<i class="icon fa-bell fa-fw" aria-hidden="true"></i><span>{L_NOTIFICATIONS} </span><strong class="badge<!-- IF not NOTIFICATIONS_COUNT --> hidden<!-- ENDIF -->">{NOTIFICATIONS_COUNT}</strong>
+							</a>
+						</li>
+					<!-- ENDIF -->
+
+					<!-- IF U_MCP -->
+						<li data-last-responsive="true">
+							<a href="{U_MCP}" title="{L_MCP}" role="menuitem">
+								<i class="icon fa-gavel fa-fw" aria-hidden="true"></i><span>Modération</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+
+					<!-- IF U_ACP -->
+						<li data-last-responsive="true">
+							<a href="{U_ACP}" title="{L_ACP}" role="menuitem">
+								<i class="icon fa-cogs fa-fw" aria-hidden="true"></i><span>Administration</span>
+							</a>
+						</li>
+					<!-- ENDIF -->
+
+					<li>
+						<a href="{U_LOGIN_LOGOUT}" title="{L_LOGIN_LOGOUT}" accesskey="x" role="menuitem">
+							<i class="icon fa-power-off fa-fw" aria-hidden="true"></i><span>{L_LOGIN_LOGOUT}</span>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</li>
+
+	<!-- Menu déroulant "Ajouter..." -->
+	<!-- IF .geo_categories -->
+	<li class="rightside" data-skip-responsive="true">
+		<div class="menu-container">
+			<a class="header-avatar">
+				<span>Ajouter</span>
+			</a>
+			<div class="sub-menu">
+				<ul class="menu-contents">
+					<!-- BEGIN geo_categories -->
+						<!-- IF geo_categories.FIRST_FORUM_ID -->
+							<li>
+								<a href="posting.php?mode=post&f={geo_categories.FIRST_FORUM_ID}">
+									{geo_categories.CATEGORY_NAME}
+								</a>
+							</li>
+						<!-- ENDIF -->
+					<!-- END geo_categories -->
+				</ul>
+			</div>
+		</div>
+	</li>
+	<!-- ENDIF -->
+<!-- ENDIF -->

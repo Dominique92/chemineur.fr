@@ -1,0 +1,23 @@
+Bloquer chem4
+Créer base
+Exporter base / créer et importer
+
+Copier phpBB sauf doc & config.php
+Copier assets/MyOl, MySlider & jquery-ui
+Copier ext/Dominique92/Chemineur, GeoBB, Images, MyPhpBB & VTTrack
+Copier ext/ext2/* ext
+Copier ext/cleantalk
+Copier gps/*
+Copier files/*
+Copier images/smilies/*
+Copier images/avatars/upload/*
+
+config.php changer nom base
+
+/install -> Mettre à jour
+Delete /install
+admin -> Paramètres de cookie -> chemineur.fr
+admin -> Supprimer données OBSOLETS
+Delete ex ext2/...
+
+Test VTTrack.fr

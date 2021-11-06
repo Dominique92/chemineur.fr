@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="256" width="256">
+	<style>
+		* {
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			stroke-width: 7;
+		}
+		line {
+			stroke: black;
+			stroke-width: 6;
+		}
+	</style>
+
+	<path d="M16 60 l12.3 -31,11 30" fill="none" stroke="brown" />
+	<path d="M35 30 l-3 -11.5,-1 0,-5 13,16 2" stroke="lime" />
+	<line x1="15" y1="61" x2="22" y2="61" />
+	<line x1="46" y1="59" x2="39" y2="61" />
+	<rect x="20" y="6" width="12" height="20" rx="4" fill="red" transform="rotate(21)" />
+	<ellipse cx="34" cy="8.5" rx="7" ry="7" fill="salmon" />
+	<ellipse cx="31" cy="10" rx="7" ry="2.5" fill="black" transform="rotate(-13)" />
+</svg>

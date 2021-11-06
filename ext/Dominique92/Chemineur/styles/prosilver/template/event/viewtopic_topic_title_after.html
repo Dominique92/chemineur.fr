@@ -1,0 +1,64 @@
+<!-- This map -->
+<!-- INCLUDE selector.html -->
+<!-- INCLUDEJS @Dominique92_Chemineur/layersVector.js -->
+
+<!-- IF GEO_JSON -->
+<table id="etiquette">
+	<!-- IF MAP_TYPE == 'point' -->
+		<tr><td class="ehg"></td><td class="ehm"></td><td class="ehd"></td></tr>
+
+		<tr><td class="emg"></td><td class="emm">
+			<h1>
+				{TOPIC_TITLE}
+				<!-- IF FORUM_IMAGE -->
+					<img src="{FORUM_IMAGE}" title="{FORUM_NAME}" />
+				<!-- ENDIF -->
+				<span>(<a href="viewforum.php?f={FORUM_ID}" title="Voir les autres {FORUM_NAME}s">{FORUM_NAME}</a>)</span>
+			</h1>
+
+			<h3 id="point-coordinates"></h3>
+			<script>
+				var displayPointId = 'point-coordinates';
+			</script>
+
+			<!-- IF GEO_ALTITUDE -->
+				<h3>Altitude: {GEO_ALTITUDE} m</h3>
+			<!-- ENDIF -->
+
+			<!-- IF GEO_MASSIF -->
+				<h3>Massif: {GEO_MASSIF}</h3>
+			<!-- ENDIF -->
+
+		</td><td class="emd"></td></tr>
+
+		<tr><td class="ebg"></td><td class="ebm"></td><td class="ebd"></td></tr>
+	<!-- ENDIF -->
+
+	<!-- IF .quickmod --><!-- Teste si moderateur -->
+		<tr><td colspan="2">
+			<ul class="post-buttons" style="float:right">
+				<li>
+					<a href="https://www.openstreetmap.org/#map=18/{GEO_LAT}/{GEO_LON}"
+						class="button" style="padding: 2px">
+						OSM
+					</a>
+				</li>
+				<li>
+					<a href="posting.php?mode=edit&f={FORUM_ID}&p={TOPIC_FIRST_POST_ID}"
+						title="Modifier l'entête de la fiche" class="button button-icon-only">
+						<i class="icon fa-pencil fa-fw" aria-hidden="true"></i>
+						<span class="sr-only">{L_BUTTON_EDIT}</span>
+					</a>
+				</li>
+				<li>
+					<a href="mcp.php?f={FORUM_ID}&t={TOPIC_ID}&quickmod=1&action=delete_topic"
+						title="Supprimer la fiche et les commentaires" class="button button-icon-only">
+						<i class="icon fa-times fa-fw" aria-hidden="true"></i>
+						<span class="sr-only">{L_BUTTON_DELETE}</span>
+					</a>
+				</li>
+			</ul>
+		</td></tr>
+	<!-- ENDIF -->
+</table>
+<!-- ENDIF -->

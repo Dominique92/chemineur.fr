@@ -1,0 +1,41 @@
+<!-- IF MAP_TYPE -->
+
+	<!-- Polyfill iOS -->
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+	<!-- Map resize -->
+	<!-- INCLUDECSS {T_ASSETS_PATH}/jquery-ui/jquery-ui.min.css -->
+	<!-- INCLUDEJS {T_ASSETS_PATH}/jquery-ui/jquery-ui.min.js -->
+
+	<!-- Proj4 projections Swiss & UK -->
+	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/proj4/proj4-src.js -->
+
+	<!-- IF IS_IE -->
+		<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/ol/polyfill.min.js -->
+	<!-- ENDIF -->
+
+	<!-- Openlayers -->
+	<!-- INCLUDECSS {T_ASSETS_PATH}/MyOl/ol/ol.css -->
+	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/ol/ol.js -->
+
+	<!-- IF not IS_IE -->
+		<!-- Recherche par nom -->
+		<!-- INCLUDECSS {T_ASSETS_PATH}/MyOl/geocoder/ol-geocoder.css -->
+		<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/geocoder/ol-geocoder.js -->
+	<!-- ENDIF -->
+
+	<!-- My Openlayers -->
+	<!-- INCLUDECSS {T_ASSETS_PATH}/MyOl/myol.css -->
+	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/myol.js -->
+
+	<!-- This map -->
+	<!-- INCLUDECSS @Dominique92_GeoBB/stylesheet.css -->
+	<!-- INCLUDEJS @Dominique92_GeoBB/layerGeoBB.js -->
+
+	<script>
+		var scriptName = '{SCRIPT_NAME}',
+			mapType = '{MAP_TYPE}',
+			mapKeys = {MAP_KEYS};
+	</script>
+<!-- ENDIF -->

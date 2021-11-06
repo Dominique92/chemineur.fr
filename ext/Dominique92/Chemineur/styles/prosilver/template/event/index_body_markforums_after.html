@@ -1,0 +1,44 @@
+<!-- This map -->
+<!-- INCLUDE selector.html -->
+<!-- INCLUDEJS @Dominique92_Chemineur/layersVector.js -->
+
+<ul class="nouvelles">
+	<li>{L_FEED_NEWS}{L_COLON}</li>
+	<!-- BEGIN nouvelles -->
+		<li>
+			<!-- IF nouvelles.POST_ID == nouvelles.TOPIC_FIRST_POST_ID -->Création de<!-- ELSE -->Commentaire sur<!-- ENDIF -->
+			<!-- IF nouvelles.FORUM_IMAGE -->
+				<a href="viewforum.php?f={nouvelles.FORUM_ID}" title="{nouvelles.FORUM_NAME}">
+					<img src="{nouvelles.FORUM_IMAGE}" />
+				</a>
+			<!-- ENDIF -->
+			<a title="{L_VIEW_LATEST_POST}"
+				href="viewtopic.php?t={nouvelles.TOPIC_ID}#p{nouvelles.POST_ID}">
+				{nouvelles.TOPIC_TITLE}
+			</a>
+			<!-- IF nouvelles.POST_ATTACHMENT -->
+				<img style="width:24px" src="ext/Dominique92/Chemineur/styles/prosilver/theme/images/photo.png"
+					title="Avec {nouvelles.POST_ATTACHMENT} photo<!-- IF nouvelles.POST_ATTACHMENT > 1 -->s<!-- ENDIF -->"
+				/>
+			<!-- ENDIF -->
+			<!-- IF nouvelles.GEO_MASSIF -->
+				({nouvelles.GEO_MASSIF})
+			<!-- ENDIF -->
+			<!-- IF not nouvelles.FORUM_IMAGE -->
+				dans <a href="viewforum.php?f={nouvelles.FORUM_ID}" title="{L_FORUM_INDEX}">{nouvelles.FORUM_NAME}</a>
+			<!-- ENDIF -->
+			{L_POST_BY_AUTHOR}
+			<a href="memberlist.php?mode=viewprofile&amp;u={nouvelles.POSTER_ID}"
+				title="{L_VIEWING_MEMBER_PROFILE}">
+				{nouvelles.USERNAME}
+			</a>
+			{L_POSTED_ON_DATE}
+			{nouvelles.POST_TIME}
+		</li>
+	<!-- BEGINELSE -->
+		<li>{L_NO_TOPICS_TIME_FRAME}</li>
+	<!-- END nouvelles -->
+	<!-- IF .nouvelles -->
+		<li><a href="?nouvelles={PLUS_NOUVELLES}">Plus de nouvelles...</a></li>
+	<!-- ENDIF -->
+</ul>
