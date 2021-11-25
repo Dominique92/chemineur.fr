@@ -183,12 +183,10 @@ body,
 }
 
 #etiquette {
-	float: left;
 	margin: 20px 10px;
 }
 @media screen and (max-width: 600px) {
 	#etiquette {
-		float: none;
 		margin: 0 !important;
 		width: 100% !important;
 	}

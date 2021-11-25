@@ -105,14 +105,15 @@ class listener implements EventSubscriberInterface
 		$sql = "
 			SELECT t.topic_id, topic_title,
 				t.forum_id, forum_name, forum_image,
-				topic_first_post_id, post_id, post_attachment, topic_posts_approved,
-				username, poster_id, post_time, post_attachment, geo_massif
+				topic_first_post_id, p.post_id, p.post_attachment, topic_posts_approved,
+				username, p.poster_id, p.post_time, p1.geo_massif
 			FROM	 ".TOPICS_TABLE." AS t
 				JOIN ".FORUMS_TABLE." AS f USING (forum_id)
 				JOIN ".POSTS_TABLE ." AS p ON (p.post_id = t.topic_last_post_id)
+				JOIN ".POSTS_TABLE ." AS p1 ON (p1.post_id = t.topic_first_post_id)
 				JOIN ".USERS_TABLE."  AS u ON (p.poster_id = u.user_id)
-			WHERE post_visibility = ".ITEM_APPROVED."
-			ORDER BY post_time DESC
+			WHERE p.post_visibility = ".ITEM_APPROVED."
+			ORDER BY p.post_time DESC
 			LIMIT ".$nouvelles;
 		$result = $this->db->sql_query($sql);
 		while ($row = $this->db->sql_fetchrow($result))
