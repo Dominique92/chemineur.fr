@@ -3,7 +3,11 @@ var map = new ol.Map({
 		view: new ol.View({
 			enableRotation: false,
 		}),
-		controls: controlsCollection(typeof controlOptions == 'object' ? controlOptions : {})
+		controls: controlsCollection({
+				permalink: {
+					display: mapType == 'index',
+				},
+			})
 			.concat(controlLayerSwitcher()),
 		layers: [
 			// Low map resolution : points

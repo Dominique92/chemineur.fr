@@ -673,10 +673,10 @@ function controlPrint() {
 			poElcs = document.querySelectorAll('input[name=print-orientation]:checked'),
 			orientation = poElcs.length ? parseInt(poElcs[0].value) : 0;
 
-		mapEl.style.maxHeight = mapEl.style.maxWidth = 'none';
-		mapEl.style.width = orientation == 0 ? '210mm' : '297mm';
-		mapEl.style.height = orientation == 0 ? '297mm' : '209.9mm';
-		// -.1mm for Chrome landscape no marging bug
+		mapEl.style.maxHeight = mapEl.style.maxWidth =
+			mapEl.style.float = 'none';
+		mapEl.style.width = orientation == 0 ? '208mm' : '295mm';
+		mapEl.style.height = orientation == 0 ? '295mm' : '208mm';
 		map.setSize([mapEl.clientWidth, mapEl.clientHeight]);
 
 		// Set portrait / landscape
@@ -725,7 +725,7 @@ function controlsCollection(options) {
 		new ol.control.ScaleLine(),
 
 		// Bottom right
-		controlPermalink(options.controlPermalink),
+		controlPermalink(options.permalink),
 		new ol.control.Attribution(),
 	];
 }
