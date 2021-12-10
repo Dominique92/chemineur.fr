@@ -130,7 +130,17 @@ class listener implements EventSubscriberInterface
 		$sql = "SELECT post_text,bbcode_uid,bbcode_bitfield FROM ".POSTS_TABLE." WHERE post_subject LIKE '!{$this->user->style['style_name']}'";
 		$result = $this->db->sql_query($sql);
 		$row = $this->db->sql_fetchrow($result);
-		$this->template->assign_var ('GEO_PRESENTATION', generate_text_for_display($row['post_text'], $row['bbcode_uid'], $row['bbcode_bitfield'], OPTION_FLAG_BBCODE, true));
+		if ($row)
+			$this->template->assign_var (
+				'GEO_PRESENTATION',
+				generate_text_for_display(
+					$row['post_text'],
+					$row['bbcode_uid'],
+					$row['bbcode_bitfield'],
+					OPTION_FLAG_BBCODE,
+					true
+				)
+			);
 		$this->db->sql_freeresult($result);
 	}
 
@@ -170,7 +180,8 @@ class listener implements EventSubscriberInterface
 			$this->block_array = $vars['block_array'];
 			$this->block_array['TEXT_SIZE'] = strlen (@$this->post_data[$post_id]['post_text']) * count($this->attachments[$post_id]);
 			$this->block_array['DATE'] = str_replace (' 00:00', '', $this->user->format_date($vars['attachment']['filetime']));
-			$this->block_array['AUTEUR'] = $vars['row']['user_sig'];
+			if (isset ($vars['row']))
+				$this->block_array['AUTEUR'] = $vars['row']['user_sig'];
 			//BEST Retrouver le nom du "poster_id" : $vars['attachment']['poster_id'] ??
 			$this->block_array['EXIF'] = $vars['attachment']['exif'];
 			foreach ($vars['attachment'] AS $k=>$v)
