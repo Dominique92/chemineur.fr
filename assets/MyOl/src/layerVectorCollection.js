@@ -11,7 +11,7 @@
  */
 function layerGeoBB(options) {
 	return layerVectorCluster(Object.assign({
-		host: '//chemineur.fr/',
+		host: '//chemineur.fr/', //TODO investiger pourquoi c'est pris par urlFunction & convertProperties
 		urlFunction: function(options, bbox, selection) {
 			return options.host + 'ext/Dominique92/GeoBB/gis.php?limit=10000' +
 				'&layer=' + (options.subLayer || 'simple') +
@@ -59,11 +59,9 @@ function layerGeoBB(options) {
  */
 function layerWri(options) {
 	return layerVectorCluster(Object.assign({
-		host: '//www.refuges.info/',
-		nb_points: 'all',
+		host: '//www.refuges.info/', //TODO investiger pourquoi c'est pris par urlFunction & convertProperties
 		urlFunction: function(options, bbox, selection) {
-			return options.host + 'api/bbox' +
-				'?nb_points=' + options.nb_points +
+			return options.host + 'api/bbox?nb_points=all' +
 				'&type_points=' + selection.join(',') +
 				'&bbox=' + bbox.join(',');
 		},
@@ -197,7 +195,6 @@ function layerC2C(options) {
  * From: https://openlayers.org/en/latest/examples/vector-osm.html
  * Doc: http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
  */
-//BEST BUG IE SCRIPT5007: Impossible d’obtenir la propriété  « toString » d’une référence null ou non définie (lié à n'appelle pas featuresloadend)
 function layerOverpass(options) {
 	const format = new ol.format.OSMXML(),
 		layer = layerVectorCluster(Object.assign({

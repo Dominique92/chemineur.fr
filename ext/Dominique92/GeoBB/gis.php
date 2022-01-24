@@ -167,7 +167,7 @@ while ($row = $db->sql_fetchrow($result)) {
 
 	// Disjoin points having the same coordinate
 	$geophp = json_decode ($row['geo_json']);
-	trunc ($geophp);
+	$geophp = trunc ($geophp);
 	if ($geophp->type == 'Point') {
 		while (in_array (signature ($geophp->coordinates), $signatures))
 			$geophp->coordinates[0] += 0.00001;
@@ -204,7 +204,7 @@ echo json_encode ([
 	'features' => $features,
 ]);
 
-function trunc (&$a) {
+function trunc ($a) {
 	if (gettype($a) == 'object')
 		foreach ($a AS $k=>$v)
 			trunc ($a->{$k});

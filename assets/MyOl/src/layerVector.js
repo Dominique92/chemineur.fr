@@ -19,7 +19,7 @@
 //BEST BUG icons blink when too many
 function layerVector(opt) {
 	const options = Object.assign({
-			zIndex: 2, // Above the base layer & the clusters
+			zIndex: 10, // Features : above the base layer (zIndex = 1)
 			format: new ol.format.GeoJSON(),
 			strategy: ol.loadingstrategy.bbox,
 			styleOptionsClusterFunction: styleOptionsCluster,
@@ -82,7 +82,6 @@ function layerVector(opt) {
 	});
 
 	// Callback function to define feature display from the properties received from the server
-	//BEST BUG IE n'appelle pas featuresloadend avec overpass. Impact overpass
 	source.on('featuresloadend', function(evt) {
 		for (let f in evt.features) {
 			// These options will be displayed by the hover response
@@ -97,12 +96,12 @@ function layerVector(opt) {
 					options
 				) : {};
 
-			// detect lines or polygons
+			// Detect lines or polygons
 			evt.features[f].display.area = ol.extent.getArea(evt.features[f].getGeometry().getExtent());
 		}
 	});
 
-	// style callback function for the layer
+	// Style callback function for the layer
 	function style(feature) {
 		const properties = feature.getProperties();
 
@@ -120,7 +119,7 @@ function layerVector(opt) {
 			const styleOptions = styleOptionsFunction(feature, Object.assign(feature.getProperties(), feature.display), options);
 
 			//HACK to render the html entities in the canvas
-			if (styleOptions.text) {
+			if (styleOptions && styleOptions.text) {
 				elLabel.innerHTML = styleOptions.text.getText();
 
 				if (elLabel.innerHTML) {
@@ -155,7 +154,7 @@ function layerVector(opt) {
 		const hoverSource = new ol.source.Vector(),
 			hoverLayer = new ol.layer.Vector({
 				source: hoverSource,
-				zIndex: 3, // Above the features
+				zIndex: 30, // Hover : above the the features
 				//BEST declutter: true, //To avoid dumping the other labels
 				style: function(feature) {
 					return displayStyle(feature, feature.hoverStyleOptionsFunction);
@@ -243,15 +242,15 @@ function layerVector(opt) {
  * Clustering features
  */
 function layerVectorCluster(options) {
+	// Detailed layer
+	const layer = layerVector(options);
+
 	// No clustering
 	if (!options.distance)
-		return layerVector(options);
+		return layer;
 
-	// Detailed layer
-	const layer = layerVector(options),
-
-		// Clusterized source
-		clusterSource = new ol.source.Cluster({
+	// Clusterized source
+	const clusterSource = new ol.source.Cluster({
 			source: layer.getSource(),
 			distance: options.distance,
 			geometryFunction: geometryFunction,
@@ -261,10 +260,10 @@ function layerVectorCluster(options) {
 		// Clusterized layer
 		clusterLayer = new ol.layer.Vector(Object.assign({
 			source: clusterSource,
-			zIndex: 1, // Above the base layer
 			//BEST declutter: true,
 			style: clusterStyle,
-			visible: layer.getVisible(), // Get the selector status 
+			visible: layer.getVisible(),
+			zIndex: layer.getZIndex(),
 		}, options));
 
 	// Propagate setVisible following the selector status
@@ -392,7 +391,7 @@ function memCheckbox(selectorName, callback) {
 		if (selectorName)
 			document.cookie =
 			typeof selection == 'object' ? selectorName + '=' + selection.join(',') : (selection ? 'on' : '') +
-			'path=/; SameSite=Lax; ' +
+			'path=/; SameSite=Strict; ' +
 			'expires=' + new Date(2100, 0).toUTCString(); // Keep over all session
 
 		if (inputEls.length && typeof callback == 'function')
@@ -447,7 +446,7 @@ function styleOptionsIcon(iconUrl) {
 		return {
 			image: new ol.style.Icon({
 				src: iconUrl,
-				imgSize: [24, 24], // IE compatibility //BEST automatic detect
+				imgSize: [24, 24], // IE compatibility //BEST automatic detect or polyfill
 			}),
 		};
 }
@@ -531,7 +530,7 @@ function styleOptionsLabel(text, properties, important) {
 
 	return {
 		text: new ol.style.Text(styleTextOptions),
-		zIndex: 3, // Above the the clusters
+		zIndex: 40, // Label : above the the features & editor
 	};
 }
 

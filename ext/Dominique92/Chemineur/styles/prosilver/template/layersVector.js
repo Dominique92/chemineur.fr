@@ -2,23 +2,11 @@ if (typeof map !== 'undefined') {
 	map.addLayer(layerWri({
 		selectorName: 'wri-features',
 		distance: 30,
-	}));
-	map.addLayer(layerPyreneesRefuges({
-		selectorName: 'prc-features',
-		distance: 30,
-	}));
-	map.addLayer(layerGeoBB({
-		host: '//alpages.info/',
-		selectorName: 'alp-features',
-		argSelName: 'forums',
-		distance: 30,
-		attribution: 'Alpages',
-	}));
-	map.addLayer(layerC2C({
-		selectorName: 'c2c-features',
+		zIndex: 6,
 	}));
 	map.addLayer(layerOverpass({
 		selectorName: 'osm-features',
+		zIndex: 5,
 		symbols: {
 			hotel: 'City Hall',
 			guest_house: 'City Hall',
@@ -44,6 +32,23 @@ if (typeof map !== 'undefined') {
 			internet_access: 'Oil Field',
 			telephone: 'Telephone',
 		},
+	}));
+	map.addLayer(layerPyreneesRefuges({
+		selectorName: 'prc-features',
+		distance: 30,
+		zIndex: 4,
+	}));
+	map.addLayer(layerC2C({
+		selectorName: 'c2c-features',
+		zIndex: 3,
+	}));
+	map.addLayer(layerGeoBB({
+		host: '//alpages.info/',
+		selectorName: 'alp-features',
+		argSelName: 'forums',
+		distance: 30,
+		attribution: 'Alpages',
+		zIndex: 2,
 	}));
 }
 

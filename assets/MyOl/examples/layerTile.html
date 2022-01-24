@@ -11,9 +11,6 @@ Based on https://openlayers.org
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link href="images/favicon.png" rel="icon" type="image/png" />
 
-	<!-- IE compatibility -->
-	<script nomodule src="../ol/polyfill.min.js"></script>
-
 	<!-- Openlayers -->
 	<link  href="../ol/ol.css" type="text/css" rel="stylesheet">
 	<script src="../ol/ol.js"></script>
@@ -51,15 +48,19 @@ const mapKeys = {
 	// Get your own (free) OS key at https://osdatahub.os.uk/
 	'os': 'P8MjahLAlyDAHXEH2engwXJG6KDYsVzF',
 	// Get your own (free) BING key at https://www.microsoft.com/en-us/maps/create-a-bing-maps-key
-	'bing': 'ArLngay7TxiroomF7HLEXCS7kTWexf1_1s1qiF7nbTYs2IkD3XLcUnvSlKbGRZxt',
+	'bing': 'AldBMbaKNyat-j6CBRKxxH05uaxP7dvQu1RnMWCQEGGC3z0gjBu-bLniE_8WZvcC',
 };
 	</script>
 	<script>
-new ol.Map({
+const map = new ol.Map({
 	target: 'map',
 	view: new ol.View({
-		center: [700000, 5600000],
-		zoom: 7,
+		center: [-700000, 7000000], // Angleterre
+		zoom: 6,
+//		center: [700000, 5600000], // Sud est
+//		zoom: 7,
+//		center: [850000, 5630000], // Turin
+//		zoom: 11,
 	}),
 	controls: [
 		new ol.control.Zoom(),
@@ -68,6 +69,12 @@ new ol.Map({
 });
 	</script>
 	<script src="print_script.js"></script>
+	<script>
+const v = map.getView();
+v.on('change:resolution', function() {
+	console.log('resolution = ' + Math.round(v.getResolutionForZoom(v.getZoom())));
+});
+	</script>
 
 	<h4 style="margin-bottom:0">Tests</h4>
 	<div>Check all baselayers</div>

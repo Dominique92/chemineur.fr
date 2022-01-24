@@ -137,7 +137,7 @@ function controlPermalink(options) {
 				aEl.href = options.hash + 'map=' + newParams.join('/');
 			if (options.setUrl)
 				location.href = '#map=' + newParams.join('/');
-			document.cookie = 'map=' + newParams.join('/') + ';path=/; SameSite=Lax';
+			document.cookie = 'map=' + newParams.join('/') + ';path=/; SameSite=Strict';
 		}
 	}
 	return control;
@@ -256,8 +256,7 @@ function controlGeocoder(options) {
 		title: 'Recherche sur la carte',
 	}, options);
 
-	if (typeof Geocoder != 'function' || // Vérify if geocoder is available
-		document.documentMode) // Not supported in IE
+	if (typeof Geocoder != 'function') // Vérify if geocoder is available
 		return new ol.control.Control({
 			element: document.createElement('div'), //HACK no button
 		});
@@ -295,6 +294,7 @@ function controlGPS() {
 				'orange', // 1 : waiting physical GPS sensor position & altitude
 				'lime', // 2 : active, centered & oriented
 				'grey', // 3 : active, do not centered nor oriented
+				//BEST No orange wait position when no real GPS captor
 			],
 			title: 'Centrer sur la position GPS',
 			activate: function(state) {
@@ -489,7 +489,8 @@ function controlLoadGPX(options) {
 
 	inputEl.type = 'file';
 	inputEl.addEventListener('change', function() {
-		reader.readAsText(inputEl.files[0]);
+		if (inputEl.files)
+			reader.readAsText(inputEl.files[0]);
 	});
 
 	reader.onload = function() {
@@ -536,11 +537,14 @@ function controlLoadGPX(options) {
 		const extent = ol.extent.createEmpty();
 		for (let f in features)
 			ol.extent.extend(extent, features[f].getGeometry().getExtent());
-		map.getView().fit(extent, {
-			maxZoom: 17,
-			size: map.getSize(),
-			padding: [5, 5, 5, 5],
-		});
+		if (ol.extent.isEmpty(extent))
+			alert('Fichier GPX vide');
+		else
+			map.getView().fit(extent, {
+				maxZoom: 17,
+				size: map.getSize(),
+				padding: [5, 5, 5, 5],
+			});
 	};
 	return control;
 }

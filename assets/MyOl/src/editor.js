@@ -75,7 +75,7 @@ function layerEditGeoJson(options) {
 		}),
 		layer = new ol.layer.Vector({
 			source: source,
-			zIndex: 4, // Cursor above the features
+			zIndex: 20, // Editor & cursor : above the features
 			style: style,
 		}),
 		snap = new ol.interaction.Snap({

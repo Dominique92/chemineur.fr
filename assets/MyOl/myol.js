@@ -110,12 +110,11 @@ function layerMRI() {
 /**
  * Kompas (Austria)
  * Requires layerOSM
- * This will not work on http: pages. No workarond available !
  */
 function layerKompass(subLayer) {
 	return layerOSM(
-		'http://ec{0-3}.cdn.ecmaps.de/WmsGateway.ashx.jpg?' + // Not available via https
-		'Experience=ecmaps&MapStyle=' + subLayer + '&TileX={x}&TileY={y}&ZoomLevel={z}',
+		'https://chemineur.fr/assets/proxy/?s=ecmaps.de&type=x-icon' + // Not available via https
+		'&Experience=ecmaps&MapStyle=' + subLayer + '&TileX={x}&TileY={y}&ZoomLevel={z}',
 		'<a href="http://www.kompass.de/livemap/">KOMPASS</a>'
 	);
 }
@@ -149,11 +148,12 @@ function layerGoogle(subLayer) {
 /**
  * Stamen http://maps.stamen.com
  */
-function layerStamen(subLayer) {
+function layerStamen(subLayer, min) {
 	return new ol.layer.Tile({
 		source: new ol.source.Stamen({
 			layer: subLayer,
 		}),
+		minResolution: min || 0,
 	});
 }
 
@@ -204,19 +204,23 @@ function layerSwissTopo(layer1) {
 		matrixIds[r] = r;
 	}
 
-	return new ol.layer.Tile({
-		source: new ol.source.WMTS(({
-			crossOrigin: 'anonymous',
-			url: '//wmts2{0-4}.geo.admin.ch/1.0.0/' + layer1 + '/default/current/3857/{TileMatrix}/{TileCol}/{TileRow}.jpeg',
-			tileGrid: new ol.tilegrid.WMTS({
-				origin: ol.extent.getTopLeft(projectionExtent),
-				resolutions: resolutions,
-				matrixIds: matrixIds,
-			}),
-			requestEncoding: 'REST',
-			attributions: '&copy <a href="https://map.geo.admin.ch/">SwissTopo</a>',
-		})),
-	});
+	return [
+		layerStamen('terrain', 300),
+		new ol.layer.Tile({
+			maxResolution: 300,
+			source: new ol.source.WMTS(({
+				crossOrigin: 'anonymous',
+				url: '//wmts2{0-4}.geo.admin.ch/1.0.0/' + layer1 + '/default/current/3857/{TileMatrix}/{TileCol}/{TileRow}.jpeg',
+				tileGrid: new ol.tilegrid.WMTS({
+					origin: ol.extent.getTopLeft(projectionExtent),
+					resolutions: resolutions,
+					matrixIds: matrixIds,
+				}),
+				requestEncoding: 'REST',
+				attributions: '&copy <a href="https://map.geo.admin.ch/">SwissTopo</a>',
+			})),
+		}),
+	];
 }
 
 /**
@@ -235,21 +239,49 @@ function layerSpain(server, subLayer) {
 }
 
 /**
+ * Italy IGM
+ */
+function layerIGM() {
+	return [
+		subLayerIGM('IGM_25000', 'CB.IGM25000', 5, 10),
+		subLayerIGM('IGM_100000', 'MB.IGM100000', 10, 20),
+		subLayerIGM('IGM_250000', 'CB.IGM250000', 20, 120),
+		layerStamen('terrain', 120),
+	];
+
+	function subLayerIGM(url, layer, min, max) {
+		return new ol.layer.Tile({
+			minResolution: min,
+			maxResolution: max,
+			source: new ol.source.TileWMS({
+				url: 'https://chemineur.fr/assets/proxy/?s=minambiente.it&type=png' + // Not available via https
+					'&map=/ms_ogc/WMS_v1.3/raster/' + url + '.map',
+				params: {
+					layers: layer,
+				},
+				attributions: '&copy <a href="http://www.pcn.minambiente.it/viewer/">IGM</a>',
+			}),
+		});
+	}
+}
+
+/**
  * Ordnance Survey : Great Britain
  * var mapKeys.os = Get your own (free) key at https://osdatahub.os.uk/
  */
 function layerOS(subLayer) {
-	//BEST carte stamen hors zoom ou extent
-
-	return typeof mapKeys == 'object' && mapKeys && mapKeys.os ?
+	return typeof mapKeys == 'object' && mapKeys && mapKeys.os ? [
+		layerStamen('terrain', 1700),
 		new ol.layer.Tile({
 			extent: [-1198263, 6365000, 213000, 8702260],
-			minZoom: 6.5,
-			maxZoom: 16.4,
+			minResolution: 2,
+			maxResolution: 1700,
 			source: new ol.source.XYZ({
-				url: 'https://api.os.uk/maps/raster/v1/zxy/' + subLayer + '/{z}/{x}/{y}.png?key=' + mapKeys.os,
+				url: 'https://api.os.uk/maps/raster/v1/zxy/' + subLayer +
+					'/{z}/{x}/{y}.png?key=' + mapKeys.os,
 			}),
-		}) : null;
+		}),
+	] : null;
 }
 
 /**
@@ -257,6 +289,9 @@ function layerOS(subLayer) {
  * var mapKeys.bing = Get your own (free) key at http://www.ordnancesurvey.co.uk/business-and-government/products/os-openspace/
  */
 function layerBing(subLayer) {
+	if (typeof mapKeys != 'object' || !mapKeys || !mapKeys.bing)
+		return null;
+
 	const layer = new ol.layer.Tile();
 
 	//HACK : Avoid to call https://dev.virtualearth.net/... if no bing layer is required
@@ -269,7 +304,7 @@ function layerBing(subLayer) {
 		}
 	});
 
-	return typeof mapKeys == 'object' && mapKeys.bing ? layer : null;
+	return layer;
 }
 
 /**
@@ -287,8 +322,10 @@ function layersCollection() {
 		'SwissTopo': layerSwissTopo('ch.swisstopo.pixelkarte-farbe'),
 		'Autriche': layerKompass('KOMPASS Touristik'),
 		'Angleterre': layerOS('Outdoor_3857'),
+		'Italie': layerIGM(),
 		'Espagne': layerSpain('mapa-raster', 'MTN'),
 		'Photo IGN': layerIGN('ORTHOIMAGERY.ORTHOPHOTOS', 'jpeg', 'pratique'),
+		'Photo Bing': layerBing('Aerial'),
 		'Photo Google': layerGoogle('s'),
 	};
 }
@@ -311,7 +348,6 @@ function layersDemo() {
 		'Kompas': layerKompass('KOMPASS'),
 
 		'Bing': layerBing('Road'),
-		'Bing photo': layerBing('Aerial'),
 		'Bing hybrid': layerBing('AerialWithLabels'),
 
 		'Google road': layerGoogle('m'),
@@ -336,8 +372,8 @@ function layersDemo() {
 		'IGN forêt': layerIGN('LANDCOVER.FORESTAREAS', 'png'),
 		'IGN limites': layerIGN('ADMINISTRATIVEUNITS.BOUNDARIES', 'png'),
 
-		'Swiss photo': layerSwissTopo('ch.swisstopo.swissimage'),
-		'Espagne photo': layerSpain('pnoa-ma', 'OI.OrthoimageCoverage'),
+		'Photo Swiss': layerSwissTopo('ch.swisstopo.swissimage'),
+		'Photo Espagne': layerSpain('pnoa-ma', 'OI.OrthoimageCoverage'),
 
 		'SHADOW': layerIGN('ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'png'),
 		'Etat major': layerIGN('GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40'),
@@ -369,7 +405,6 @@ function controlLayerSwitcher(baseLayers, options) {
 		selectedBaseLayerName = layerNames[0];
 
 	// Build html transparency slider
-	//BEST BUG IE don't work on IE. Impact réglage mode transparent
 	const rangeContainerEl = document.createElement('div');
 	rangeContainerEl.innerHTML =
 		'<input type="range" id="layerSlider" title="Glisser pour faire varier la tranparence">' +
@@ -399,8 +434,12 @@ function controlLayerSwitcher(baseLayers, options) {
 		// Build html baselayers selectors
 		for (let name in baseLayers)
 			if (baseLayers[name]) { // Don't dispatch null layers (whose declaraton failed)
+				// Make all choices an array of layers
+				if (!baseLayers[name].length)
+					baseLayers[name] = [baseLayers[name]];
+
 				const selectionEl = document.createElement('div'),
-					inputId = 'l' + baseLayers[name].ol_uid + (name ? '-' + name : '');
+					inputId = 'l' + baseLayers[name][0].ol_uid + (name ? '-' + name : '');
 
 				control.element.appendChild(selectionEl);
 				selectionEl.innerHTML =
@@ -410,8 +449,10 @@ function controlLayerSwitcher(baseLayers, options) {
 				selectionEl.firstChild.onclick = selectBaseLayer;
 				baseLayers[name].inputEl = selectionEl.firstChild; // Mem it for further ops
 
-				baseLayers[name].setVisible(false); // Don't begin to get the tiles yet
-				map.addLayer(baseLayers[name]);
+				for (let l = 0; l < baseLayers[name].length; l++) { //HACK IE
+					baseLayers[name][l].setVisible(false); // Don't begin to get the tiles yet
+					map.addLayer(baseLayers[name][l]);
+				}
 			}
 
 		displayBaseLayers(); // Init layers
@@ -432,8 +473,11 @@ function controlLayerSwitcher(baseLayers, options) {
 		for (let name in baseLayers)
 			if (baseLayers[name]) {
 				baseLayers[name].inputEl.checked = false;
-				baseLayers[name].setVisible(false);
-				baseLayers[name].setOpacity(1);
+				for (let l = 0; l < baseLayers[name].length; l++) { //HACK IE
+					//for (let layer of baseLayers[name]) {
+					baseLayers[name][l].setVisible(false);
+					baseLayers[name][l].setOpacity(1);
+				}
 			}
 
 		// Baselayer default is the first of the selection
@@ -441,20 +485,23 @@ function controlLayerSwitcher(baseLayers, options) {
 			selectedBaseLayerName = Object.keys(baseLayers)[0];
 
 		baseLayers[selectedBaseLayerName].inputEl.checked = true;
-		baseLayers[selectedBaseLayerName].setVisible(true);
+		for (let l = 0; l < baseLayers[selectedBaseLayerName].length; l++) //HACK IE
+			baseLayers[selectedBaseLayerName][l].setVisible(true);
 
 		if (lastBaseLayerName) {
 			baseLayers[lastBaseLayerName].inputEl.checked = true;
-			baseLayers[lastBaseLayerName].setVisible(true);
+			for (let l = 0; l < baseLayers[lastBaseLayerName].length; l++) //HACK IE
+				baseLayers[lastBaseLayerName][l].setVisible(true);
 		}
 		displayTransparencyRange();
 	}
 
 	function displayTransparencyRange() {
 		if (transparentBaseLayerName) {
-			baseLayers[transparentBaseLayerName].setOpacity(
-				rangeContainerEl.firstChild.value / 100
-			);
+			for (let l = 0; l < baseLayers[transparentBaseLayerName].length; l++) //HACK IE
+				baseLayers[transparentBaseLayerName][l].setOpacity(
+					rangeContainerEl.firstChild.value / 100
+				);
 			rangeContainerEl.className = 'double-layer';
 		} else
 			rangeContainerEl.className = 'single-layer';
@@ -462,7 +509,7 @@ function controlLayerSwitcher(baseLayers, options) {
 
 	function selectBaseLayer(evt) {
 		// Set the baselayer cookie
-		document.cookie = 'baselayer=' + this.value + '; path=/; SameSite=Lax; expires=' +
+		document.cookie = 'baselayer=' + this.value + '; path=/; SameSite=Strict; expires=' +
 			new Date(2100, 0).toUTCString();
 
 		// Manage the double selection
@@ -511,7 +558,7 @@ function controlLayerSwitcher(baseLayers, options) {
 //BEST BUG icons blink when too many
 function layerVector(opt) {
 	const options = Object.assign({
-			zIndex: 2, // Above the base layer & the clusters
+			zIndex: 10, // Features : above the base layer (zIndex = 1)
 			format: new ol.format.GeoJSON(),
 			strategy: ol.loadingstrategy.bbox,
 			styleOptionsClusterFunction: styleOptionsCluster,
@@ -574,7 +621,6 @@ function layerVector(opt) {
 	});
 
 	// Callback function to define feature display from the properties received from the server
-	//BEST BUG IE n'appelle pas featuresloadend avec overpass. Impact overpass
 	source.on('featuresloadend', function(evt) {
 		for (let f in evt.features) {
 			// These options will be displayed by the hover response
@@ -589,12 +635,12 @@ function layerVector(opt) {
 					options
 				) : {};
 
-			// detect lines or polygons
+			// Detect lines or polygons
 			evt.features[f].display.area = ol.extent.getArea(evt.features[f].getGeometry().getExtent());
 		}
 	});
 
-	// style callback function for the layer
+	// Style callback function for the layer
 	function style(feature) {
 		const properties = feature.getProperties();
 
@@ -612,7 +658,7 @@ function layerVector(opt) {
 			const styleOptions = styleOptionsFunction(feature, Object.assign(feature.getProperties(), feature.display), options);
 
 			//HACK to render the html entities in the canvas
-			if (styleOptions.text) {
+			if (styleOptions && styleOptions.text) {
 				elLabel.innerHTML = styleOptions.text.getText();
 
 				if (elLabel.innerHTML) {
@@ -647,7 +693,7 @@ function layerVector(opt) {
 		const hoverSource = new ol.source.Vector(),
 			hoverLayer = new ol.layer.Vector({
 				source: hoverSource,
-				zIndex: 3, // Above the features
+				zIndex: 30, // Hover : above the the features
 				//BEST declutter: true, //To avoid dumping the other labels
 				style: function(feature) {
 					return displayStyle(feature, feature.hoverStyleOptionsFunction);
@@ -735,15 +781,15 @@ function layerVector(opt) {
  * Clustering features
  */
 function layerVectorCluster(options) {
+	// Detailed layer
+	const layer = layerVector(options);
+
 	// No clustering
 	if (!options.distance)
-		return layerVector(options);
+		return layer;
 
-	// Detailed layer
-	const layer = layerVector(options),
-
-		// Clusterized source
-		clusterSource = new ol.source.Cluster({
+	// Clusterized source
+	const clusterSource = new ol.source.Cluster({
 			source: layer.getSource(),
 			distance: options.distance,
 			geometryFunction: geometryFunction,
@@ -753,10 +799,10 @@ function layerVectorCluster(options) {
 		// Clusterized layer
 		clusterLayer = new ol.layer.Vector(Object.assign({
 			source: clusterSource,
-			zIndex: 1, // Above the base layer
 			//BEST declutter: true,
 			style: clusterStyle,
-			visible: layer.getVisible(), // Get the selector status 
+			visible: layer.getVisible(),
+			zIndex: layer.getZIndex(),
 		}, options));
 
 	// Propagate setVisible following the selector status
@@ -884,7 +930,7 @@ function memCheckbox(selectorName, callback) {
 		if (selectorName)
 			document.cookie =
 			typeof selection == 'object' ? selectorName + '=' + selection.join(',') : (selection ? 'on' : '') +
-			'path=/; SameSite=Lax; ' +
+			'path=/; SameSite=Strict; ' +
 			'expires=' + new Date(2100, 0).toUTCString(); // Keep over all session
 
 		if (inputEls.length && typeof callback == 'function')
@@ -939,7 +985,7 @@ function styleOptionsIcon(iconUrl) {
 		return {
 			image: new ol.style.Icon({
 				src: iconUrl,
-				imgSize: [24, 24], // IE compatibility //BEST automatic detect
+				imgSize: [24, 24], // IE compatibility //BEST automatic detect or polyfill
 			}),
 		};
 }
@@ -1023,7 +1069,7 @@ function styleOptionsLabel(text, properties, important) {
 
 	return {
 		text: new ol.style.Text(styleTextOptions),
-		zIndex: 3, // Above the the clusters
+		zIndex: 40, // Label : above the the features & editor
 	};
 }
 
@@ -1080,7 +1126,7 @@ function styleOptionsCluster(feature, properties) {
  */
 function layerGeoBB(options) {
 	return layerVectorCluster(Object.assign({
-		host: '//chemineur.fr/',
+		host: '//chemineur.fr/', //TODO investiger pourquoi c'est pris par urlFunction & convertProperties
 		urlFunction: function(options, bbox, selection) {
 			return options.host + 'ext/Dominique92/GeoBB/gis.php?limit=10000' +
 				'&layer=' + (options.subLayer || 'simple') +
@@ -1128,11 +1174,9 @@ function layerGeoBB(options) {
  */
 function layerWri(options) {
 	return layerVectorCluster(Object.assign({
-		host: '//www.refuges.info/',
-		nb_points: 'all',
+		host: '//www.refuges.info/', //TODO investiger pourquoi c'est pris par urlFunction & convertProperties
 		urlFunction: function(options, bbox, selection) {
-			return options.host + 'api/bbox' +
-				'?nb_points=' + options.nb_points +
+			return options.host + 'api/bbox?nb_points=all' +
 				'&type_points=' + selection.join(',') +
 				'&bbox=' + bbox.join(',');
 		},
@@ -1266,7 +1310,6 @@ function layerC2C(options) {
  * From: https://openlayers.org/en/latest/examples/vector-osm.html
  * Doc: http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
  */
-//BEST BUG IE SCRIPT5007: Impossible d’obtenir la propriété  « toString » d’une référence null ou non définie (lié à n'appelle pas featuresloadend)
 function layerOverpass(options) {
 	const format = new ol.format.OSMXML(),
 		layer = layerVectorCluster(Object.assign({
@@ -1511,7 +1554,7 @@ function controlPermalink(options) {
 				aEl.href = options.hash + 'map=' + newParams.join('/');
 			if (options.setUrl)
 				location.href = '#map=' + newParams.join('/');
-			document.cookie = 'map=' + newParams.join('/') + ';path=/; SameSite=Lax';
+			document.cookie = 'map=' + newParams.join('/') + ';path=/; SameSite=Strict';
 		}
 	}
 	return control;
@@ -1630,8 +1673,7 @@ function controlGeocoder(options) {
 		title: 'Recherche sur la carte',
 	}, options);
 
-	if (typeof Geocoder != 'function' || // Vérify if geocoder is available
-		document.documentMode) // Not supported in IE
+	if (typeof Geocoder != 'function') // Vérify if geocoder is available
 		return new ol.control.Control({
 			element: document.createElement('div'), //HACK no button
 		});
@@ -1669,6 +1711,7 @@ function controlGPS() {
 				'orange', // 1 : waiting physical GPS sensor position & altitude
 				'lime', // 2 : active, centered & oriented
 				'grey', // 3 : active, do not centered nor oriented
+				//BEST No orange wait position when no real GPS captor
 			],
 			title: 'Centrer sur la position GPS',
 			activate: function(state) {
@@ -1863,7 +1906,8 @@ function controlLoadGPX(options) {
 
 	inputEl.type = 'file';
 	inputEl.addEventListener('change', function() {
-		reader.readAsText(inputEl.files[0]);
+		if (inputEl.files)
+			reader.readAsText(inputEl.files[0]);
 	});
 
 	reader.onload = function() {
@@ -1910,11 +1954,14 @@ function controlLoadGPX(options) {
 		const extent = ol.extent.createEmpty();
 		for (let f in features)
 			ol.extent.extend(extent, features[f].getGeometry().getExtent());
-		map.getView().fit(extent, {
-			maxZoom: 17,
-			size: map.getSize(),
-			padding: [5, 5, 5, 5],
-		});
+		if (ol.extent.isEmpty(extent))
+			alert('Fichier GPX vide');
+		else
+			map.getView().fit(extent, {
+				maxZoom: 17,
+				size: map.getSize(),
+				padding: [5, 5, 5, 5],
+			});
 	};
 	return control;
 }
@@ -2182,7 +2229,7 @@ function layerEditGeoJson(options) {
 		}),
 		layer = new ol.layer.Vector({
 			source: source,
-			zIndex: 4, // Cursor above the features
+			zIndex: 20, // Editor & cursor : above the features
 			style: style,
 		}),
 		snap = new ol.interaction.Snap({

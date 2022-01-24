@@ -21,7 +21,6 @@ function controlLayerSwitcher(baseLayers, options) {
 		selectedBaseLayerName = layerNames[0];
 
 	// Build html transparency slider
-	//BEST BUG IE don't work on IE. Impact réglage mode transparent
 	const rangeContainerEl = document.createElement('div');
 	rangeContainerEl.innerHTML =
 		'<input type="range" id="layerSlider" title="Glisser pour faire varier la tranparence">' +
@@ -51,8 +50,12 @@ function controlLayerSwitcher(baseLayers, options) {
 		// Build html baselayers selectors
 		for (let name in baseLayers)
 			if (baseLayers[name]) { // Don't dispatch null layers (whose declaraton failed)
+				// Make all choices an array of layers
+				if (!baseLayers[name].length)
+					baseLayers[name] = [baseLayers[name]];
+
 				const selectionEl = document.createElement('div'),
-					inputId = 'l' + baseLayers[name].ol_uid + (name ? '-' + name : '');
+					inputId = 'l' + baseLayers[name][0].ol_uid + (name ? '-' + name : '');
 
 				control.element.appendChild(selectionEl);
 				selectionEl.innerHTML =
@@ -62,8 +65,10 @@ function controlLayerSwitcher(baseLayers, options) {
 				selectionEl.firstChild.onclick = selectBaseLayer;
 				baseLayers[name].inputEl = selectionEl.firstChild; // Mem it for further ops
 
-				baseLayers[name].setVisible(false); // Don't begin to get the tiles yet
-				map.addLayer(baseLayers[name]);
+				for (let l = 0; l < baseLayers[name].length; l++) { //HACK IE
+					baseLayers[name][l].setVisible(false); // Don't begin to get the tiles yet
+					map.addLayer(baseLayers[name][l]);
+				}
 			}
 
 		displayBaseLayers(); // Init layers
@@ -84,8 +89,11 @@ function controlLayerSwitcher(baseLayers, options) {
 		for (let name in baseLayers)
 			if (baseLayers[name]) {
 				baseLayers[name].inputEl.checked = false;
-				baseLayers[name].setVisible(false);
-				baseLayers[name].setOpacity(1);
+				for (let l = 0; l < baseLayers[name].length; l++) { //HACK IE
+					//for (let layer of baseLayers[name]) {
+					baseLayers[name][l].setVisible(false);
+					baseLayers[name][l].setOpacity(1);
+				}
 			}
 
 		// Baselayer default is the first of the selection
@@ -93,20 +101,23 @@ function controlLayerSwitcher(baseLayers, options) {
 			selectedBaseLayerName = Object.keys(baseLayers)[0];
 
 		baseLayers[selectedBaseLayerName].inputEl.checked = true;
-		baseLayers[selectedBaseLayerName].setVisible(true);
+		for (let l = 0; l < baseLayers[selectedBaseLayerName].length; l++) //HACK IE
+			baseLayers[selectedBaseLayerName][l].setVisible(true);
 
 		if (lastBaseLayerName) {
 			baseLayers[lastBaseLayerName].inputEl.checked = true;
-			baseLayers[lastBaseLayerName].setVisible(true);
+			for (let l = 0; l < baseLayers[lastBaseLayerName].length; l++) //HACK IE
+				baseLayers[lastBaseLayerName][l].setVisible(true);
 		}
 		displayTransparencyRange();
 	}
 
 	function displayTransparencyRange() {
 		if (transparentBaseLayerName) {
-			baseLayers[transparentBaseLayerName].setOpacity(
-				rangeContainerEl.firstChild.value / 100
-			);
+			for (let l = 0; l < baseLayers[transparentBaseLayerName].length; l++) //HACK IE
+				baseLayers[transparentBaseLayerName][l].setOpacity(
+					rangeContainerEl.firstChild.value / 100
+				);
 			rangeContainerEl.className = 'double-layer';
 		} else
 			rangeContainerEl.className = 'single-layer';
@@ -114,7 +125,7 @@ function controlLayerSwitcher(baseLayers, options) {
 
 	function selectBaseLayer(evt) {
 		// Set the baselayer cookie
-		document.cookie = 'baselayer=' + this.value + '; path=/; SameSite=Lax; expires=' +
+		document.cookie = 'baselayer=' + this.value + '; path=/; SameSite=Strict; expires=' +
 			new Date(2100, 0).toUTCString();
 
 		// Manage the double selection

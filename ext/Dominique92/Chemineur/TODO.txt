@@ -1,25 +1,25 @@
 //BEST CHEMINEUR
 ================
-Voir forum Evolutions & bugs sur chemineur.fr
-Purger la base des liens photos externes
-Permutations POSTS dans le template modération : déplacer les fichiers la permutation des posts => event/mcp_topic_postrow_post_before.html
-Ne pas afficher les points en doublon (flux wri, prc, c2c)
-Stockage images sur plus d'1 répertoire => ? plugin ?
-Mettre les media print dans print.css
-Pouvoir inclure : Les caractères ( ) sont interdits dans les URLs, il faut les remplacer respectivement par %28 et %29
-Erreur type de caractères randos Lozerre
-Récup trace diaporamas + chemins chem2
-EDIT.log => Trace supprimer le sujet
-Améliorer référencement (-> Prat communal !)
-ext/GeoBB : ajouter les coordonnées au template print
-Ajouter bouton permutation sur page point chem
-	View film + permutation
-coordonnéés V2 ? WRI: http://chemineur.fr/point/prc618
-BUG http://www.refuges.info/point/4965/ => http://chemineur.fr/point/20110623090825
-CHEMINEUR => http://jean.louis.negre.free.fr/indebaug.htm
-Carte pour 1 forum (aéroport, … ?)
-?? Les pictos ont disparu sur V3
-?? Click sur une icone chem2 plante
+//TODO BUG geocoder dont't accept enter on posting.php
+//TODO BUG Entre point puis transforme en ligne -> Reste le point qu’on ne peut pas enlever !
+
+//BEST Voir forum Evolutions & bugs sur chemineur.fr
+//BEST Purger la base des liens photos externes
+//BEST Permutations POSTS dans le template modération : déplacer les fichiers la permutation des posts => event/mcp_topic_postrow_post_before.html
+//BEST Ne pas afficher les points en doublon (flux wri, prc, c2c)
+//BEST Stockage images sur plus d'1 répertoire => ? plugin ?
+//BEST Mettre les media print dans print.css
+//BEST Pouvoir inclure : Les caractères ( ) sont interdits dans les URLs, il faut les remplacer respectivement par %28 et %29
+//BEST Erreur type de caractères randos Lozerre
+//BEST Récup trace diaporamas + chemins chem2
+//BEST EDIT.log => Trace supprimer le sujet
+//BEST Améliorer référencement (-> Prat communal !)
+//BEST ext/GeoBB : ajouter les coordonnées au template print
+//BEST Ajouter bouton permutation sur page point chem / 	View film + permutation
+//BEST coordonnéés V2 ? WRI: http://chemineur.fr/point/prc618
+//BEST BUG http://www.refuges.info/point/4965/ => http://chemineur.fr/point/20110623090825
+//BEST ?? Les pictos ont disparu sur V3
+//BEST ?? Click sur une icone chem2 plante
 
 //BEST AIDE CHEM
 Un sujet est actif quand il y a eu des contributions récentes.

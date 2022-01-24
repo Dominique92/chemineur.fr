@@ -1,5 +1,6 @@
 #map {
 	height: 65vw;
+	max-height: 65vh;
 	width: 100%;
 	background: #eef5f9;
 	font-size: 16px;
