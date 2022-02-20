@@ -62,13 +62,13 @@ new ol.Map({
 	controls: [
 		new ol.control.Zoom(),
 		controlLayerSwitcher({
-			OSM: new ol.layer.Tile({
-				source: new ol.source.OSM(),
-			}),
 			Stamen: new ol.layer.Tile({
 				source: new ol.source.Stamen({
 					layer: 'terrain',
 				}),
+			}),
+			'OSM org': new ol.layer.Tile({
+				source: new ol.source.OSM(),
 			}),
 			Watercolor: new ol.layer.Tile({
 				source: new ol.source.Stamen({

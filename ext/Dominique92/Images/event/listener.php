@@ -148,10 +148,12 @@ class listener implements EventSubscriberInterface
 				$info[] = $exif ['Model'];
 			}
 
+			//TODO BUG voir pourquoi on a des filetime très négatifs
+			$filetime = max(0,(strtotime(@$exif['DateTimeOriginal']) ?: @$exif['FileDateTime'] ?: @$attachment['filetime']));
 			$this->db->sql_query (implode (' ', [
 				'UPDATE '.ATTACHMENTS_TABLE,
 				'SET exif = "'.implode (' ', $info ?: ['~']).'",',
-					'filetime = '.(strtotime(@$exif['DateTimeOriginal']) ?: @$exif['FileDateTime'] ?: @$attachment['filetime']),
+					'filetime = '.$filetime,
 				'WHERE attach_id = '.$attachment['attach_id']
 			]));
 		}

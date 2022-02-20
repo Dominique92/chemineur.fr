@@ -10,9 +10,13 @@ function controlLayerSwitcher(baseLayers, options) {
 			element: document.createElement('div'),
 		}),
 		layerNames = Object.keys(baseLayers),
-		match = document.cookie.match(/baselayer=([^;]+)/);
+		request = // Search values in cookies & args
+		window.location.search + '&' + // Priority to the url args ?selector=1,2,3
+		window.location.hash + '&' + // Then the hash #selector=1,2,3
+		document.cookie + '&', // Then the cookies
+		match = request.match(/baselayer=([^&]+)/);
 
-	var selectedBaseLayerName = match ? match[1] : layerNames[0],
+	var selectedBaseLayerName = match ? decodeURI(match[1]) : layerNames[0],
 		lastBaseLayerName = '',
 		transparentBaseLayerName = '';
 

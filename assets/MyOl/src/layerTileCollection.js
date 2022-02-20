@@ -75,23 +75,25 @@ function layerGoogle(subLayer) {
 /**
  * Stamen http://maps.stamen.com
  */
-function layerStamen(subLayer, min) {
+function layerStamen(subLayer, minResolution) {
 	return new ol.layer.Tile({
 		source: new ol.source.Stamen({
 			layer: subLayer,
 		}),
-		minResolution: min || 0,
+		minResolution: minResolution || 0,
 	});
 }
 
 /**
  * IGN France
- * Doc on http://api.ign.fr
- * var mapKeys.ign = Get your own (free)IGN key at https://professionnels.ign.fr/user
- * IGN V2 & photo don't need this key
+ * var mapKeys.ign = Get your own (free)IGN key at https://geoservices.ign.fr/
+ * doc : https://geoservices.ign.fr/services-web
  */
-function layerIGN(subLayer, format) {
-	let IGNresolutions = [],
+function layerIGN(subLayer, options) {
+	options = options || {};
+
+	let key = options.key || (typeof mapKeys == 'object' ? mapKeys.ign : null),
+		IGNresolutions = [],
 		IGNmatrixIds = [];
 
 	for (let i = 0; i < 18; i++) {
@@ -99,13 +101,14 @@ function layerIGN(subLayer, format) {
 		IGNmatrixIds[i] = i.toString();
 	}
 
-	return typeof mapKeys == 'object' && mapKeys && mapKeys.ign ?
-		new ol.layer.Tile({
+	if (key)
+		return new ol.layer.Tile({
+			maxResolution: options.maxResolution,
 			source: new ol.source.WMTS({
-				url: '//wxs.ign.fr/' + mapKeys.ign + '/wmts',
+				url: '//wxs.ign.fr/' + key + '/wmts',
 				layer: subLayer,
 				matrixSet: 'PM',
-				format: 'image/' + (format || 'jpeg'),
+				format: 'image/' + (options.format || 'jpeg'),
 				tileGrid: new ol.tilegrid.WMTS({
 					origin: [-20037508, 20037508],
 					resolutions: IGNresolutions,
@@ -114,7 +117,7 @@ function layerIGN(subLayer, format) {
 				style: 'normal',
 				attributions: '&copy; <a href="http://www.geoportail.fr/" target="_blank">IGN</a>',
 			}),
-		}) : null;
+		});
 }
 
 /**
@@ -176,10 +179,10 @@ function layerIGM() {
 		layerStamen('terrain', 120),
 	];
 
-	function subLayerIGM(url, layer, min, max) {
+	function subLayerIGM(url, layer, minResolution, maxResolution) {
 		return new ol.layer.Tile({
-			minResolution: min,
-			maxResolution: max,
+			minResolution: minResolution,
+			maxResolution: maxResolution,
 			source: new ol.source.TileWMS({
 				url: 'https://chemineur.fr/assets/proxy/?s=minambiente.it&type=png' + // Not available via https
 					'&map=/ms_ogc/WMS_v1.3/raster/' + url + '.map',
@@ -245,13 +248,18 @@ function layersCollection() {
 		'Refuges.info': layerMRI(),
 		'OSM fr': layerOSM('//{a-c}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png'),
 		'IGN TOP25': layerIGN('GEOGRAPHICALGRIDSYSTEMS.MAPS'), // Need an IGN key
-		'IGN V2': layerIGN('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'png', 'pratique'), // 'pratique' is the key for the free layers
+		'IGN V2': layerIGN('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', {
+			format: 'png',
+			key: 'pratique',
+		}),
 		'SwissTopo': layerSwissTopo('ch.swisstopo.pixelkarte-farbe'),
 		'Autriche': layerKompass('KOMPASS Touristik'),
 		'Angleterre': layerOS('Outdoor_3857'),
 		'Italie': layerIGM(),
 		'Espagne': layerSpain('mapa-raster', 'MTN'),
-		'Photo IGN': layerIGN('ORTHOIMAGERY.ORTHOPHOTOS', 'jpeg', 'pratique'),
+		'Photo IGN': layerIGN('ORTHOIMAGERY.ORTHOPHOTOS', {
+			key: 'pratique',
+		}),
 		'Photo Bing': layerBing('Aerial'),
 		'Photo Google': layerGoogle('s'),
 	};
@@ -260,10 +268,6 @@ function layersCollection() {
 function layersDemo() {
 	return Object.assign(layersCollection(), {
 		'OSM': layerOSM('//{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
-		'Hike & Bike': layerOSM(
-			'http://{a-c}.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png',
-			'<a href="//www.hikebikemap.org/">hikebikemap.org</a>'
-		), // Not on https
 		'OSM cycle': layerThunderforest('cycle'),
 		'OSM landscape': layerThunderforest('landscape'),
 		'OSM trains': layerThunderforest('pioneer'),
@@ -277,6 +281,9 @@ function layersDemo() {
 		'Bing': layerBing('Road'),
 		'Bing hybrid': layerBing('AerialWithLabels'),
 
+		'Photo Swiss': layerSwissTopo('ch.swisstopo.swissimage'),
+		'Photo Espagne': layerSpain('pnoa-ma', 'OI.OrthoimageCoverage'),
+
 		'Google road': layerGoogle('m'),
 		'Google terrain': layerGoogle('p'),
 		'Google hybrid': layerGoogle('s,h'),
@@ -284,26 +291,5 @@ function layersDemo() {
 		'Toner': layerStamen('toner'),
 		'Watercolor': layerStamen('watercolor'),
 		//BEST neutral layer
-
-		// Need an IGN key
-		'IGN Classique': layerIGN('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.CLASSIQUE'),
-		'IGN Standard': layerIGN('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.STANDARD'),
-		//Double 	'SCAN25TOUR': layerIGN('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR'),
-		'IGN 1950': layerIGN('ORTHOIMAGERY.ORTHOPHOTOS.1950-1965', 'png'),
-		'Cadastre': layerIGN('CADASTRALPARCELS.PARCELS', 'png'),
-		'IGN plan': layerIGN('GEOGRAPHICALGRIDSYSTEMS.PLANIGN'),
-		'IGN route': layerIGN('GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.ROUTIER'),
-		'IGN noms': layerIGN('GEOGRAPHICALNAMES.NAMES', 'png'),
-		'IGN rail': layerIGN('TRANSPORTNETWORKS.RAILWAYS', 'png'),
-		'IGN hydro': layerIGN('HYDROGRAPHY.HYDROGRAPHY', 'png'),
-		'IGN forêt': layerIGN('LANDCOVER.FORESTAREAS', 'png'),
-		'IGN limites': layerIGN('ADMINISTRATIVEUNITS.BOUNDARIES', 'png'),
-
-		'Photo Swiss': layerSwissTopo('ch.swisstopo.swissimage'),
-		'Photo Espagne': layerSpain('pnoa-ma', 'OI.OrthoimageCoverage'),
-
-		'SHADOW': layerIGN('ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'png'),
-		'Etat major': layerIGN('GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40'),
-		'ETATMAJOR10': layerIGN('GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR10'),
 	});
 }
