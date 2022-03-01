@@ -9,7 +9,7 @@ self.addEventListener('install', function(evt) {
 				'index.css',
 				'index.js',
 				'manifest.json',
-				'favicon.png',
+				'favicon.png', //BEST icone SVG
 				'../ol/ol.css',
 				'../ol/ol.js',
 				'../geocoder/ol-geocoder.min.css',

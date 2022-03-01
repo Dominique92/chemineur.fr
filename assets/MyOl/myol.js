@@ -32,12 +32,12 @@ try {
  * Debug facilities on mobile
  */
 //HACK use hash ## for error alerts
-if (!window.location.hash.indexOf('##'))
+if (!location.hash.indexOf('##'))
 	window.addEventListener('error', function(evt) {
 		alert(evt.filename + ' ' + evt.lineno + ':' + evt.colno + '\n' + evt.message);
 	});
 //HACK use hash ### to route all console logs on alerts
-if (window.location.hash == '###')
+if (location.hash == '###')
 	console.log = function(message) {
 		alert(message);
 	};
@@ -125,11 +125,14 @@ function layerKompass(subLayer) {
  * var mapKeys.thunderforest = Get your own (free) THUNDERFOREST key at https://manage.thunderforest.com
  */
 function layerThunderforest(subLayer) {
-	return typeof mapKeys == 'object' && mapKeys && mapKeys.thunderforest ?
+	if (typeof mapKeys == 'undefined' || !mapKeys) mapKeys = {};
+
+	if (mapKeys.thunderforest)
 		layerOSM(
-			'//{a-c}.tile.thunderforest.com/' + subLayer + '/{z}/{x}/{y}.png?apikey=' + mapKeys.thunderforest,
+			'//{a-c}.tile.thunderforest.com/' + subLayer +
+			'/{z}/{x}/{y}.png?apikey=' + mapKeys.thunderforest,
 			'<a href="http://www.thunderforest.com">Thunderforest</a>'
-		) : null;
+		);
 }
 
 /**
@@ -163,22 +166,23 @@ function layerStamen(subLayer, minResolution) {
  * doc : https://geoservices.ign.fr/services-web
  */
 function layerIGN(subLayer, options) {
-	options = options || {};
+	if (typeof mapKeys == 'undefined' || !mapKeys) mapKeys = {};
 
-	let key = options.key || (typeof mapKeys == 'object' ? mapKeys.ign : null),
-		IGNresolutions = [],
-		IGNmatrixIds = [];
+	if (mapKeys.ign) {
+		options = options || {};
 
-	for (let i = 0; i < 18; i++) {
-		IGNresolutions[i] = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256 / Math.pow(2, i);
-		IGNmatrixIds[i] = i.toString();
-	}
+		let IGNresolutions = [],
+			IGNmatrixIds = [];
 
-	if (key)
+		for (let i = 0; i < 18; i++) {
+			IGNresolutions[i] = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256 / Math.pow(2, i);
+			IGNmatrixIds[i] = i.toString();
+		}
+
 		return new ol.layer.Tile({
 			maxResolution: options.maxResolution,
 			source: new ol.source.WMTS({
-				url: '//wxs.ign.fr/' + key + '/wmts',
+				url: '//wxs.ign.fr/' + mapKeys.ign + '/wmts',
 				layer: subLayer,
 				matrixSet: 'PM',
 				format: 'image/' + (options.format || 'jpeg'),
@@ -191,6 +195,7 @@ function layerIGN(subLayer, options) {
 				attributions: '&copy; <a href="http://www.geoportail.fr/" target="_blank">IGN</a>',
 			}),
 		});
+	}
 }
 
 /**
@@ -273,18 +278,21 @@ function layerIGM() {
  * var mapKeys.os = Get your own (free) key at https://osdatahub.os.uk/
  */
 function layerOS(subLayer) {
-	return typeof mapKeys == 'object' && mapKeys && mapKeys.os ? [
-		layerStamen('terrain', 1700),
-		new ol.layer.Tile({
-			extent: [-1198263, 6365000, 213000, 8702260],
-			minResolution: 2,
-			maxResolution: 1700,
-			source: new ol.source.XYZ({
-				url: 'https://api.os.uk/maps/raster/v1/zxy/' + subLayer +
-					'/{z}/{x}/{y}.png?key=' + mapKeys.os,
+	if (typeof mapKeys == 'undefined' || !mapKeys) mapKeys = {};
+
+	if (mapKeys.os)
+		return [
+			layerStamen('terrain', 1700),
+			new ol.layer.Tile({
+				extent: [-1198263, 6365000, 213000, 8702260],
+				minResolution: 2,
+				maxResolution: 1700,
+				source: new ol.source.XYZ({
+					url: 'https://api.os.uk/maps/raster/v1/zxy/' + subLayer +
+						'/{z}/{x}/{y}.png?key=' + mapKeys.os,
+				}),
 			}),
-		}),
-	] : null;
+		];
 }
 
 /**
@@ -292,22 +300,23 @@ function layerOS(subLayer) {
  * var mapKeys.bing = Get your own (free) key at http://www.ordnancesurvey.co.uk/business-and-government/products/os-openspace/
  */
 function layerBing(subLayer) {
-	if (typeof mapKeys != 'object' || !mapKeys || !mapKeys.bing)
-		return null;
+	if (typeof mapKeys == 'undefined' || !mapKeys) mapKeys = {};
 
-	const layer = new ol.layer.Tile();
+	if (mapKeys.bing) {
+		const layer = new ol.layer.Tile();
 
-	//HACK : Avoid to call https://dev.virtualearth.net/... if no bing layer is required
-	layer.on('change:visible', function() {
-		if (!layer.getSource()) {
-			layer.setSource(new ol.source.BingMaps({
-				imagerySet: subLayer,
-				key: mapKeys.bing,
-			}));
-		}
-	});
+		//HACK : Avoid to call https://dev.virtualearth.net/... if no bing layer is required
+		layer.on('change:visible', function() {
+			if (!layer.getSource()) {
+				layer.setSource(new ol.source.BingMaps({
+					imagerySet: subLayer,
+					key: mapKeys.bing,
+				}));
+			}
+		});
 
-	return layer;
+		return layer;
+	}
 }
 
 /**
@@ -372,6 +381,7 @@ function layersDemo() {
  * Layer switcher
  * Need to include layerSwitcher.css
  */
+//BEST alt key to swith layers / transparency
 function controlLayerSwitcher(baseLayers, options) {
 	baseLayers = baseLayers || layersCollection();
 	options = options || {};
@@ -381,8 +391,8 @@ function controlLayerSwitcher(baseLayers, options) {
 		}),
 		layerNames = Object.keys(baseLayers),
 		request = // Search values in cookies & args
-		window.location.search + '&' + // Priority to the url args ?selector=1,2,3
-		window.location.hash + '&' + // Then the hash #selector=1,2,3
+		location.search + '&' + // Priority to the url args ?selector=1,2,3
+		location.hash + '&' + // Then the hash #selector=1,2,3
 		document.cookie + '&', // Then the cookies
 		match = request.match(/baselayer=([^&]+)/);
 
@@ -750,7 +760,7 @@ function layerVector(opt) {
 							// To specify feature open a new window
 							window.open(display.url, '_blank', 'resizable=yes').focus();
 						else
-							window.location = display.url;
+							location = display.url;
 					}
 					// Cluster
 					else if (geom && (features.length > 1 || display.cluster))
@@ -887,8 +897,8 @@ function readCheckbox(selectorName, withOn) {
  */
 function memCheckbox(selectorName, callback) {
 	const request = // Search values in cookies & args
-		window.location.search + ';' + // Priority to the url args ?selector=1,2,3
-		window.location.hash + ';' + // Then the hash #selector=1,2,3
+		location.search + ';' + // Priority to the url args ?selector=1,2,3
+		location.hash + ';' + // Then the hash #selector=1,2,3
 		document.cookie + ';' + // Then the cookies
 		selectorName + '=' + readCheckbox(selectorName, true).join(','), // Then the existing checks
 		match = request.match(new RegExp(selectorName + '=([^;]*)')),
@@ -983,9 +993,9 @@ function styleOptionsIcon(iconUrl) {
 // Get icon from chemineur.fr
 function styleOptionsIconChemineur(iconName) {
 	if (iconName) {
-		const icons = iconName.split(' ')
-		// Limit to 2 type names & ' ' -> '_'
-		iconName = icons[0] + (icons.length > 1 ? '_' + icons[1] : '');
+		const icons = iconName.split(' ');
+
+		iconName = icons[0] + (icons.length > 1 ? '_' + icons[1] : ''); // Limit to 2 type names & ' ' -> '_'
 
 		return styleOptionsIcon('//chemineur.fr/ext/Dominique92/GeoBB/icones/' + iconName + '.svg');
 	}
@@ -1300,6 +1310,7 @@ function layerC2C(options) {
  * From: https://openlayers.org/en/latest/examples/vector-osm.html
  * Doc: http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
  */
+//TODO BUG Access to XMLHttpRequest has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
 function layerOverpass(options) {
 	const format = new ol.format.OSMXML(),
 		layer = layerVectorCluster(Object.assign({
@@ -2106,7 +2117,7 @@ function controlPrint() {
 		document.addEventListener('keydown', function(evt) {
 			if (evt.key == 'Escape')
 				setTimeout(function() { // Delay reload for FF & Opera
-					window.location.reload();
+					location.reload();
 				});
 		});
 	}

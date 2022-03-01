@@ -1,28 +1,38 @@
-/** PWA area */
-// Force https to allow web apps and geolocation
-if (window.location.protocol == 'http:' && window.location.host != 'localhost')
-	window.location.href = window.location.href.replace('http:', 'https:');
+/**
+ * PWA
+ */
 
-// Force the script name of short url
-if (!window.location.pathname.split('/').pop())
-	window.location.href = window.location.href + 'index.php';
+// Force https to allow PWA and geolocation
+// Force full script name of short url to allow PWA
+if (!location.href.match(/(https|localhost).*index/)) {
+	location.replace(
+		(location.hostname == 'localhost' ? 'http://' : 'https://') +
+		location.hostname +
+		location.pathname + (location.pathname.slice(-1) == '/' ? scriptName : '') +
+		location.search);
+
+	throw 'Exit'; //HACK exit page
+}
 
 // Load service worker for web application install & updates
 if ('serviceWorker' in navigator)
 	navigator.serviceWorker.register(
-		service_worker === undefined ? 'service-worker.js' : service_worker,
-		typeof scope == 'undefined' ? {} : {
-			scope: scope, // Max scope. Allow service worker to be in a different directory
+		typeof service_worker == 'undefined' ? 'service-worker.js' : service_worker, {
+			// Max scope. Allow service worker to be in a different directory
+			scope: typeof scope == 'undefined' ? './' : scope,
 		}
 	)
 	// Reload if the service worker md5 (including the total files key) has changed
 	.then(function(reg) {
 		reg.addEventListener('updatefound', function() {
 			location.reload();
+			//alert('location.reload');
 		});
 	});
 
-/** Openlayers map area */
+/**
+ * OPENLAYERS
+ */
 const areLiTags = document.getElementsByTagName('li').length,
 	elListe = document.getElementById('liste'),
 
@@ -93,6 +103,16 @@ const areLiTags = document.getElementsByTagName('li').length,
 	map = new ol.Map({
 		target: 'map',
 		controls: controls,
+		view: new ol.View({
+			constrainResolution: true, // Force le zoom sur la définition des dalles disponibles
+		}),
+	});
+
+// Add a gpx layer if any arguments to the url
+const gpxFile = location.search.replace('?', '').replace('gpx=', '');
+if (gpxFile)
+	window.addEventListener('load', function() {
+		addLayer(gpxFile + '.gpx');
 	});
 
 function addLayer(url) {
