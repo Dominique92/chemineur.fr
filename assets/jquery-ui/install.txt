@@ -1,2 +1,2 @@
 https://jqueryui.com/download/all/
-jquery-ui-1.12.1
+jquery-ui-1.13.2

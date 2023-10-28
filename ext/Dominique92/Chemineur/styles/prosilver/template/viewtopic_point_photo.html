@@ -1,28 +1,34 @@
 <!-- BEGIN _file -->
 	<!-- IF _file.LOCATION == 'local' -->
-		<table class= "photo" title="{_file.COMMENT}">
-			<tr><td class="phg"></td><td class="phm">
-				<p>
-					<!-- //BEST Images responsives de toute la largeur sur petits écrans /
-					pb du calcul de la taille demandée au serveur -->
-					<!-- IF not (_file.DATE matches '/1970/') -->
-						{_file.DATE}
-					<!-- ENDIF -->
-					<!-- //BEST Récup auteur photo // Retrouver le nom du "poster_id" : $vars['attachment']['poster_id'] -->
-					<!-- IF _file.AUTEUR -->
-						&copy; {_file.AUTEUR}
-					<!-- ENDIF -->
-				</p>
-			</td><td class="phd"></td></tr>
-			<tr><td class="pmg"></td><td class="pmm">
-				<a href="download/file.php?id={_file.ATTACH_ID}" title="{_file.COMMENT}">
-					<script>document.write('<img src="download/file.php?id={_file.ATTACH_ID}&size='+Math.round(Math.max(window.innerWidth/2.5,(window.innerWidth-100)*375/(500+{_file.TEXT_SIZE})))+'" />')</script>
-				</a>
-			</td><td class="pmd"></td></tr>
-			<tr><td class="pbg"></td><td class="pbm">
-				<p>{_file.EXIF}</p>
-			</td><td class="pbd">
-			</td></tr>
-		</table>
+		<!-- IF _file.EXTENSION == 'mp4' -->
+			<video autoplay="true" muted="true" controls="true">
+				<source src="download/file.php?id={_file.ATTACH_ID}" type="video/mp4">
+			</video>
+		<!-- ELSE -->
+			<table class= "photo" title="{_file.COMMENT}">
+				<tr><td class="phg"></td><td class="phm">
+					<p>
+						<!-- //BEST Images responsives de toute la largeur sur petits écrans /
+						pb du calcul de la taille demandée au serveur -->
+						<!-- IF not (_file.DATE matches '/1970/') -->
+							{_file.DATE}
+						<!-- ENDIF -->
+						<!-- //BEST Récup auteur photo // Retrouver le nom du "poster_id" : $vars['attachment']['poster_id'] -->
+						<!-- IF _file.AUTEUR -->
+							&copy; {_file.AUTEUR}
+						<!-- ENDIF -->
+					</p>
+				</td><td class="phd"></td></tr>
+				<tr><td class="pmg"></td><td class="pmm">
+					<a href="download/file.php?id={_file.ATTACH_ID}" title="{_file.COMMENT}">
+						<script>document.write('<img src="download/file.php?id={_file.ATTACH_ID}&size='+Math.round(Math.max(window.innerWidth/2.5,(window.innerWidth-100)*375/(500+{_file.TEXT_SIZE})))+'" />')</script>
+					</a>
+				</td><td class="pmd"></td></tr>
+				<tr><td class="pbg"></td><td class="pbm">
+					<p>{_file.EXIF}</p>
+				</td><td class="pbd">
+				</td></tr>
+			</table>
+		<!-- ENDIF -->
 	<!-- ENDIF -->
 <!-- END _file -->

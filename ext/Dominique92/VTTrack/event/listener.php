@@ -25,9 +25,7 @@ class listener implements EventSubscriberInterface
 		\phpbb\request\request_interface $request
 	) {
 		$this->db = $db;
-		$this->request = $request;
-		$this->server = $this->request->get_super_global(\phpbb\request\request_interface::SERVER);
-		$this->args = $this->request->get_super_global(\phpbb\request\request_interface::REQUEST);
+		$this->server = $request->get_super_global(\phpbb\request\request_interface::SERVER);
 	}
 
 	static public function getSubscribedEvents() {
@@ -43,11 +41,13 @@ class listener implements EventSubscriberInterface
 	*/
 	function feed_base_modify_item_sql() {
 		if (strpos ($this->server['REQUEST_URI'], 'poi.gml.php')) {
+			echo '<?xml version="1.0" encoding="ISO-8859-1"?>'.PHP_EOL.
+				'<FeatureCollection xmlns:gml="http://www.opengis.net/gml">';
+
 			$poi = request_var ('poi', 'hebergement');
 			$in = $poi[0] == 'h'
 				? 'c.forum_id IN(3,8)' // Refuges & abris
 				: 'f.forum_id IN(21)'; // Points d'eau
-
 			$bboxs = explode (',', $bbox = request_var ('bbox', '-180,-90,180,90'));
 			$bbox_sql =
 				$bboxs[0].' '.$bboxs[1].','.
@@ -55,7 +55,6 @@ class listener implements EventSubscriberInterface
 				$bboxs[2].' '.$bboxs[3].','.
 				$bboxs[0].' '.$bboxs[3].','.
 				$bboxs[0].' '.$bboxs[1];
-
 			$sql = "
 				SELECT p.post_subject, p.post_id, ST_AsGeoJSON(geom) AS geo_json ,
 					t.topic_id,
@@ -71,10 +70,6 @@ class listener implements EventSubscriberInterface
 			";
 
 			$result = $this->db->sql_query($sql);
-
-			echo '<?xml version="1.0" encoding="ISO-8859-1"?>'.PHP_EOL.
-				'<FeatureCollection xmlns:gml="http://www.opengis.net/gml">';
-
 			while ($row = $this->db->sql_fetchrow($result)) {
 				preg_match ('/\[([0-9\.]+,[0-9\.]+)\]/', str_replace (' ', '', json_encode ($row['geo_json'])), $ll);
 				preg_match ('/([a-z_]+).png/', $row['forum_image'], $icon);
@@ -92,6 +87,8 @@ class listener implements EventSubscriberInterface
 	</gml:featureMember>
 ";
 			}
+			$this->db->sql_freeresult($result);
+
 			echo '</FeatureCollection>';
 			exit; // Don't display phpBB feeds
 		}

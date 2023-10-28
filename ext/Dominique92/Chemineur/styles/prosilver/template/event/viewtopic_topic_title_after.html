@@ -15,9 +15,13 @@
 				<span>(<a href="viewforum.php?f={FORUM_ID}" title="Voir les autres {FORUM_NAME}s">{FORUM_NAME}</a>)</span>
 			</h1>
 
-			<h3 id="point-coordinates"></h3>
+			<h3 id="marker-position"></h3>
 			<script>
-				var displayPointId = 'point-coordinates';
+				// Place l'affichage de la position dans l'étiquette
+				document.getElementById('marker-position')
+					.appendChild(
+						document.getElementById('marker-string')
+					);
 			</script>
 
 			<!-- IF GEO_ALTITUDE -->
@@ -40,6 +44,12 @@
 					<a href="https://www.openstreetmap.org/#map=18/{GEO_LAT}/{GEO_LON}"
 						class="button" style="padding: 2px">
 						OSM
+					</a>
+				</li>
+				<li>
+					<a href="https://www.google.com/maps/place/{TOPIC_TITLE}/@{GEO_LAT},{GEO_LON},16z"
+						class="button" style="padding: 2px">
+						GG
 					</a>
 				</li>
 				<li>

@@ -5,6 +5,7 @@
  * @copyright (c) 2016 Dominique Cavailhez
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
+//TODO BUG Entre point puis transforme en ligne -> Reste le point qu’on ne peut pas enlever !
 
 namespace Dominique92\GeoBB\event;
 
@@ -60,7 +61,6 @@ class listener implements EventSubscriberInterface
 	*/
 	function common($vars) {
 		global $mapKeys;
-		preg_match ('/Trident/', @$this->server['HTTP_USER_AGENT'], $match);
 		$this->template->assign_var ('MAP_KEYS', json_encode (@$mapKeys));
 	}
 
@@ -107,51 +107,58 @@ class listener implements EventSubscriberInterface
 		// Valeurs à assigner à tout le template (topic)
 		$topic_row = $this->geo_data[$post_id]; // The geo_ values
 		$topic_row['topic_first_post_id'] = $topic_first_post_id;
+		$topic_row['topic_category'] = $topic_data['parent_id'];
 
 		// How to display the topic
 		//BEST map on all posts (":xxxxx")
 		preg_match ('/([\.:])(point|line|poly)/', $topic_data['forum_desc'], $desc);
 		if ($desc) {
+			// Page style
 			$view = $this->request->variable ('view', 'geo');
 			$topic_row['body_class'] = $view.' '.$view.'_'.$desc[2];
 
-			// Position
-			preg_match ('/\[([-0-9\.]*)[, ]*([-0-9\.]*)\]/', @$topic_row['geo_json'], $ll);
-			if ($ll) {
+			// Positions
+			preg_match_all ('/\[(-?[0-9.]+), ?(-?[0-9.]+)\]/', @$topic_row['geo_json'], $lls);
+			if ($lls[0]) {
 				$topic_row['forum_image'] = $topic_data['forum_image'];
 				$topic_row['map_type'] = $desc[2];
-				$topic_row['geo_lon'] = $ll[1]; // For OSM search link
-				$topic_row['geo_lat'] = $ll[2];
-				$post_row['LON_LAT'] = $ll[0];
+				$topic_row['geo_lon'] = $lls[1][0]; // For OSM search link
+				$topic_row['geo_lat'] = $lls[2][0];
+				$post_row['LON_LAT'] = $lls[0];
 
-				// Calcul de l'altitude avec mapquest
-				global $mapKeys;
+				// Altitude calculation
+				//TODO BUG si open-elevation trop long
 				if (array_key_exists ('geo_altitude', $topic_row) &&
-					!@$topic_row['geo_altitude'] &&
-					@$mapKeys['keys-mapquest'])
+					$topic_row['forum_image'] && //TODO BUG trace : too large for GET parameter
+					!@$topic_row['geo_altitude'])
+					if(0)
 				{
-					$mapquest = 'http://open.mapquestapi.com/elevation/v1/profile?key='.
-						$mapKeys['keys-mapquest'].
-						'&latLngCollection='.
-						$ll[2].','.$ll[1];
-					$mapquest_result =@file_get_contents ($mapquest) ;
-					preg_match('/"height":([-0-9]+)/', $mapquest_result, $match);
+					// Use free API
+					$api = 'https://api.open-elevation.com/api/v1/lookup?locations=';
+					foreach ($lls[2] AS $k=>$lat) {
+						$lon = $lls[1][$k] -= round ($lls[1][$k] / 360) * 360; // Avoid wrap
+						$api .= ($k?'|':'').$lat.','.$lon;
+					}
+					$result = json_decode (file_get_contents ($api));
 
 					// Update the template data
-					$topic_row['geo_altitude'] = $match && $match[1] > 0 ? $match[1].'~' : '~';
+					$topic_row['geo_altitude'] = '';
+					foreach ($result->results AS $k=>$v)
+						$topic_row['geo_altitude'] .= ($k?',':'').$v->elevation;
+					$topic_row['geo_altitude'] .= '~';
 
-					// Update the database for next time
-					$sql = "UPDATE phpbb_posts SET geo_altitude = '{$topic_row['geo_altitude']}' WHERE post_id = $post_id";     
+					// Update the database for the next time
+					$sql = "UPDATE phpbb_posts SET geo_altitude = '{$topic_row['geo_altitude']}' WHERE post_id = $post_id";
 					$this->db->sql_query($sql);
 				}
 
 				// Détermination du massif par refuges.info
 				if (array_key_exists ('geo_massif', $topic_row) && !$topic_row['geo_massif']) {
-					$f_wri_export = 'http://www.refuges.info/api/polygones?type_polygon=1,10,11,17&bbox='.
-						$ll[1].','.$ll[2].','.$ll[1].','.$ll[2];
+					$f_wri_export = 'https://www.refuges.info/api/polygones?type_polygon=1,10,11,17&bbox='.
+						$lls[1][0].','.$lls[2][0].','.$lls[1][0].','.$lls[2][0];
 					$wri_export = json_decode (@file_get_contents ($f_wri_export));
 
-					// Récupère tous les polygones englobantz
+					// Récupère tous les polygones englobants
 					if($wri_export->features)
 						foreach ($wri_export->features AS $f)
 							$ms [$f->properties->type->id] = $f->properties->nom;
@@ -170,24 +177,9 @@ class listener implements EventSubscriberInterface
 					$this->db->sql_query($sql);
 				}
 			}
-
-			// Calcul du cluster (managé par le serveur)
-			if (array_key_exists ('geo_cluster', $topic_row) && !$topic_row['geo_cluster']) {
-				$clusters_by_degree = 10;
-				$geo_center = json_decode (@$topic_row['geo_center']);
-				if ($geo_center) {
-					$topic_row['geo_cluster'] =
-						intval ((180 + $geo_center->coordinates[0]) * $clusters_by_degree) * 360 * $clusters_by_degree +
-						intval ((180 + $geo_center->coordinates[1]) * $clusters_by_degree);
-
-					// Update the database for next time
-					$sql = "UPDATE phpbb_posts SET geo_cluster = '{$topic_row['geo_cluster']}' WHERE post_id = $post_id";
-					$this->db->sql_query($sql);
-				}
-			}
 		}
 
-		// remove the extra ~ before dispplay
+		// Remove the extra ~ before display
 		foreach ($topic_row AS $k=>$v)
 			$topic_row[$k] = str_replace ('~', '', $v);
 
@@ -218,8 +210,6 @@ class listener implements EventSubscriberInterface
 					' WHERE post_id = '.$post_data['post_id'];
 				$result = $this->db->sql_query($sql);
 				$row = $this->db->sql_fetchrow($result);
-				$this->db->sql_freeresult($result);
-
 				if ($row) {
 					// Protect empty lines
 					$geo_json = json_decode ($row['geo_json']);
@@ -232,6 +222,7 @@ class listener implements EventSubscriberInterface
 
 					$this->template->assign_vars (array_change_key_case ($row, CASE_UPPER));
 				}
+				$this->db->sql_freeresult($result);
 			}
 		}
 	}
@@ -245,7 +236,7 @@ class listener implements EventSubscriberInterface
 		if (@$post['geom']) {
 			// Avoid wrap of the world
 			$geom = preg_replace_callback(
-				'/coordinates\"\:\[([0-9-.]+)/',
+				'/coordinates\"\:\[(-?[0-9.]+)/',
 				function ($matches) {
 					return 'coordinates":['.($matches[1] - round ($matches[1] / 360) * 360);
 				},
@@ -265,9 +256,8 @@ class listener implements EventSubscriberInterface
 	*/
 	function adm_page_header() {
 		$this->add_sql_column (POSTS_TABLE, 'geom', 'geometrycollection');
-		$this->add_sql_column (POSTS_TABLE, 'geo_cluster', 'int');
 		$this->add_sql_column (POSTS_TABLE, 'geo_massif', 'varchar(50)');
-		$this->add_sql_column (POSTS_TABLE, 'geo_altitude', 'varchar(12)');
+		$this->add_sql_column (POSTS_TABLE, 'geo_altitude', 'text');
 
 		//HACK (horrible !) to accept geom spatial feild
 		$file_name = $this->phpbb_root_path."phpbb/db/driver/driver.php";
@@ -279,9 +269,8 @@ class listener implements EventSubscriberInterface
 	}
 
 	function add_sql_column ($table, $column, $type) {
-		$result = $this->db->sql_query(
-			"SHOW columns FROM $table LIKE '$column'"
-		);
+		$sql ="SHOW columns FROM $table LIKE '$column'" ;
+		$result = $this->db->sql_query($sql);
 		if (!$this->db->sql_fetchrow($result))
 			$this->db->sql_query(
 				"ALTER TABLE $table ADD $column $type"

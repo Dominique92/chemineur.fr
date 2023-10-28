@@ -140,6 +140,9 @@ body,
 	font-weight: bold;
 	color: yellow;
 }
+.nouvelles a::first-letter {
+    text-transform: uppercase;
+}
 @media screen and (min-width: 600px) {
 	.nouvelles a {
 		text-overflow: ellipsis;
@@ -436,6 +439,18 @@ body,
 .photo-comment span {
 	background: #fff;
 	padding: 3px;
+}
+
+/* Videos */
+.attachbox dd {
+	margin: 10px;
+	padding: 0;
+}
+.attachbox video {
+	width: calc(100% - 24px);
+	border-width: 0 12px;
+	border-style: solid;
+	border-image: url(cadres/film.svg) 12 round;
 }
 
 /* Posting */

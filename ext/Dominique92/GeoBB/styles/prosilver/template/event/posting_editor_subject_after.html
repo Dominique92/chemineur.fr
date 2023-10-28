@@ -1,54 +1,38 @@
 <!-- IF MAP_TYPE -->
 	<div id="map"></div>
-	<input type="hidden" name="geom" id="geo_json" value='{GEO_JSON}' />
+	<input type="hidden" name="geom" id="marker-json" value='{GEO_JSON}' />
 
 	<!-- IF MAP_TYPE == 'point' -->
-		<div id="point-marker">
+		<p>Double clic sur la carte y déplace le curseur.</p>
+		<div>
 			<p>
 				Longitude :
-				<input type="text" name="lon" size="12" maxlength="12">
+				<input id="marker-lon" type="text" name="lon" size="12" maxlength="12">
 				(WGS84)&nbsp;
-				 <span style="display:none" class="epsg-21781"> / X :
-					<input type="text" name="x" size="7" maxlength="12"> (CH 1903)
-				 </span>
+				<span class="xy"> / X :
+					<input id="marker-x" type="text" name="x" size="7" maxlength="12"> (CH 1903)
+				</span>
 			</p>
 			<p>
 				Latitude :
-				<input type="text" name="lat" size="12" maxlength="12">
+				<input id="marker-lat" type="text" name="lat" size="12" maxlength="12">
 				(WGS84)&nbsp;
-				<span style="display:none" class="epsg-21781"> / Y :
-					<input type="text" name="y" size="7" maxlength="12">
+				<span class="xy"> / Y :
+					<input id="marker-y" type="text" name="y" size="7" maxlength="12">
 				</span>
 			</p>
 		</div>
 
-		<p><a onclick="marker.centerMap()" style="color:blue;cursor:pointer">
-			Centrer la carte sur le curseur
-		</a></p>
-
-		<p><a onclick="marker.centerMarker()" style="color:blue;cursor:pointer">
-			Déplacez le curseur au centre de la carte
-		</a></p>
-
-		<p>Altitude <input type="text" name="geo_altitude" size="10" class="inputbox autowidth" value="{GEO_ALTITUDE}" />*</p>
-		<p>Massif <input type="text" name="geo_massif" size="25" class="inputbox autowidth" value="{GEO_MASSIF}" />*</p>
-		<p>* Laisser le champ vide pour que le serveur le détermine automatiquement.</p>
-
-	<!-- ELSE -->
-		<div class="edit-comment">
-			<hr/><p><b>Création d‘une ligne :</b></p>
-			<p>Activer (couleur jaune) le bouton L puis :</p>
-			<p>Cliquer sur la carte et sur chaque point désiré pour dessiner une ligne,</p>
-			<p>double cliquer pour terminer.</p>
-			<p>Cliquer sur une extrémité d‘une ligne pour l‘étendre.</p>
-			<hr/><p><b>Modification d‘une ligne :</b></p>
-			<p>Activer (couleur jaune) le bouton M puis :</p>
-			<p>Cliquer et déplacer un sommet pour modifier une ligne,</p>
-			<p>Cliquer sur un segment puis déplacer pour créer un sommet,</p>
-			<p>Alt+cliquer sur un sommet pour le supprimer,</p>
-			<p>Alt+cliquer sur un segment à supprimer dans une ligne pour la couper,</p>
-			<p>Ctrl+Alt+cliquer sur un segment de ligne pour le supprimer.</p>
-			<hr/>
-		</div>
+		<p class="map-altitude">Altitude
+			<input type="text" name="geo_altitude" size="10"
+				class="inputbox autowidth" value="{GEO_ALTITUDE}" /> *
+		</p>
+		<p class="map-massif">Massif
+			<input type="text" name="geo_massif" size="25"
+				class="inputbox autowidth" value="{GEO_MASSIF}" /> *
+		</p>
+		<p class="map-altitude-massif">
+			* Laisser le champ vide pour que le serveur le détermine automatiquement.
+		</p>
 	<!-- ENDIF -->
 <!-- ENDIF -->

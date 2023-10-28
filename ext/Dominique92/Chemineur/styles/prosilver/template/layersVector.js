@@ -1,64 +1,45 @@
-if (typeof map !== 'undefined') {
-	map.addLayer(layerWri({
-		selectorName: 'wri-features',
-		distance: 30,
-		zIndex: 6,
-	}));
-	map.addLayer(layerOverpass({
-		selectorName: 'osm-features',
-		zIndex: 5,
-		symbols: {
-			hotel: 'City Hall',
-			guest_house: 'City Hall',
-			chalet: 'City Hall',
-			hostel: 'City Hall',
-			apartment: 'City Hall',
-			alpine_hut: 'Residence',
-			cabin: 'Lodge',
-			shelter: 'Fishing Hot Spot Facility',
-			basic_hut: 'Fishing Hot Spot Facility',
-			camp_site: 'Campground',
-			drinking_water: 'Drinking Water',
-			watering_place: 'Drinking Water',
-			fountain: 'Drinking Water',
-			water_point: 'Drinking Water',
-			spring: 'Drinking Water',
-			water_well: 'Drinking Water',
-			bus_stop: 'Ground Transportation',
-			parking: 'Parking Area',
-			restaurant: 'Restaurant',
-			shop: 'Shopping Center',
-			toilets: 'Restroom',
-			internet_access: 'Oil Field',
-			telephone: 'Telephone',
-		},
-	}));
-	map.addLayer(layerPyreneesRefuges({
-		selectorName: 'prc-features',
-		distance: 30,
-		zIndex: 4,
-	}));
-	map.addLayer(layerC2C({
-		selectorName: 'c2c-features',
-		zIndex: 3,
-	}));
-	map.addLayer(layerGeoBB({
-		host: '//alpages.info/',
-		selectorName: 'alp-features',
-		argSelName: 'forums',
-		distance: 30,
-		attribution: 'Alpages',
-		zIndex: 2,
-	}));
+// Force au moins une couche chemineur
+//TODO edit trace sans fond de trace
+if (!localStorage.myol_selectchem && scriptName == 'index')
+	localStorage.myol_selectchem = 'all';
+
+// Activate the layer corresponding to the topic
+if (typeof topic_category == 'string') {
+	const ls = (localStorage.myol_selectchem || '').split(',');
+	ls.push(topic_category);
+	localStorage.myol_selectchem = [...new Set(ls)];
 }
+
+if (typeof map !== 'undefined')
+	// Generate a key unique on the last 12 hours
+	//TODO ? const version = (localStorage.lastPostingDate % 43200).toString(36);
+	[new myol.layer.vector.WRI({
+			selectName: 'select-wri',
+		}),
+		new myol.layer.vector.PRC({
+			selectName: 'select-prc',
+		}),
+		new myol.layer.vector.C2C({
+			selectName: 'select-c2c',
+		}),
+		new myol.layer.vector.Overpass({
+			selectName: 'select-osm',
+		}),
+		new myol.layer.vector.Alpages({
+			selectName: 'select-alpages',
+		}),
+	].forEach(l => map.addLayer(l));
+
+if (document.URL.includes('posting'))
+	localStorage.lastPostingDate = Math.floor(Date.now() / 1000); // In seconds epoch
 
 // Resize map
 if (jQuery.ui)
 	$(map.getTargetElement()).resizable({
-		handles: 's,w,sw', // 2 côtés et 1 coin
+		handles: 's,w,sw', // 2 sides and 1 corner
 
 		resize: function(event, ui) {
 			ui.position.left = ui.originalPosition.left; // Reste à droite de la page
-			map.updateSize(); // Reaffiche tout le nouveau <div>
+			map.updateSize(); // Repost all new <div>
 		},
 	});

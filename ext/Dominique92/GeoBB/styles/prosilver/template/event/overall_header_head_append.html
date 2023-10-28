@@ -1,29 +1,13 @@
 <!-- IF MAP_TYPE -->
-
-	<!-- Polyfill iOS -->
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
 
 	<!-- Map resize -->
 	<!-- INCLUDECSS {T_ASSETS_PATH}/jquery-ui/jquery-ui.min.css -->
 	<!-- INCLUDEJS {T_ASSETS_PATH}/jquery-ui/jquery-ui.min.js -->
 
-	<!-- Proj4 projections Swiss & UK -->
-	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/proj4/proj4-src.js -->
-
 	<!-- Openlayers -->
-	<link href="{T_ASSETS_PATH}/MyOl/ol/ol.css" rel="stylesheet" media="print" />
-	<!-- INCLUDECSS {T_ASSETS_PATH}/MyOl/ol/ol.css -->
-	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/ol/ol.js -->
-
-	<!-- Recherche par nom -->
-	<!-- INCLUDECSS {T_ASSETS_PATH}/MyOl/geocoder/ol-geocoder.css -->
-	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/geocoder/ol-geocoder.js -->
-
-	<!-- My Openlayers -->
-	<link href="{T_ASSETS_PATH}/MyOl/myol.css" rel="stylesheet" media="print" />
-	<!-- INCLUDECSS {T_ASSETS_PATH}/MyOl/myol.css -->
-	<!-- INCLUDEJS {T_ASSETS_PATH}/MyOl/myol.js -->
+	<!-- INCLUDECSS {T_ASSETS_PATH}/myol/dist/myol.css -->
+	<!-- INCLUDEJS {T_ASSETS_PATH}/myol/dist/myol-debug.js -->
 
 	<!-- This map -->
 	<link href="ext/Dominique92/GeoBB/styles/prosilver/theme/stylesheet.css" rel="stylesheet" media="print" />
@@ -32,7 +16,15 @@
 
 	<script>
 		var scriptName = '{SCRIPT_NAME}',
-			mapType = '{MAP_TYPE}',
-			mapKeys = {MAP_KEYS};
+		<!-- IF FORUM_ID -->
+			forum_id = '{FORUM_ID}';
+		<!-- ENDIF -->
+		<!-- IF TOPIC_CATEGORY -->
+			topic_category = '{TOPIC_CATEGORY}';
+		<!-- ENDIF -->
+		<!-- IF MAP_KEYS -->
+			mapKeys = {MAP_KEYS},
+		<!-- ENDIF -->
+			mapType = '{MAP_TYPE}';
 	</script>
 <!-- ENDIF -->

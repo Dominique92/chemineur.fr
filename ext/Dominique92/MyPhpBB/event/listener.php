@@ -7,7 +7,6 @@
  * @copyright (c) 2020 Dominique Cavailhez
  * @license GNU General Public License, version 2 (GPL-2.0)
  */
-//BEST mesureur d'audience
 //BEST Façon de saisir un fichier icone qui n’existe pas (file exists en PHP !)
 //BEST Ne pas démarrer les ext quand on installe
 //BEST Comment retourner un mail de création d'user à l'admin ?
@@ -49,6 +48,7 @@ class listener implements EventSubscriberInterface
 		$this->auth = $auth;
 		$this->language = $language;
 
+		$this->cookie = $this->request->get_super_global(\phpbb\request\request_interface::COOKIE);
 		$this->post = $this->request->get_super_global(\phpbb\request\request_interface::POST);
 		$this->server = $this->request->get_super_global(\phpbb\request\request_interface::SERVER);
 		$this->uri = $this->server['REQUEST_SCHEME'].'://'.$this->server['SERVER_NAME'].$this->server['REQUEST_URI'];
@@ -64,11 +64,12 @@ class listener implements EventSubscriberInterface
 		// We find the calling point by searching in the software of PhpBB 3.x: "event core.<XXX>"
 		return [
 			// All
-			'core.page_header' => 'page_header',
+			'core.gen_sort_selects_after' => 'gen_sort_selects_after',
+			'core.page_footer_after' => 'page_footer_after',
 
 			// Index
-			'core.display_forums_modify_row' => 'display_forums_modify_row',
 			'core.index_modify_page_title' => 'index_modify_page_title',
+			'core.display_forums_modify_row' => 'display_forums_modify_row',
 
 			// Posting
 			'core.modify_posting_parameters' => 'modify_posting_parameters',
@@ -90,18 +91,36 @@ class listener implements EventSubscriberInterface
 	/**
 		ALL
 	*/
-	function page_header() {
-		global $myphp_template, $myphp_js;
+	function gen_sort_selects_after ($vars) {
+		/* Force display sort & direction */
+		if (defined('MYPHPBB_SORT_KEY'))
+			$vars['sort_key'] = MYPHPBB_SORT_KEY;
+		if (defined('MYPHPBB_SORT_DIR'))
+			$vars['sort_dir'] = MYPHPBB_SORT_DIR;
+	}
 
-		/* Includes template & js values defined in config.php */
-		//BEST ??? $myphp_js = ['key' => 'value'];
-		//BEST ??? $myphp_template = ['key' => 'value'];
-		if ($myphp_template)
-			$this->template->assign_vars (
-				array_change_key_case ($myphp_template, CASE_UPPER)
-			);
-		//BEST move in GYM
-		$this->template->assign_var ('MYPHP_JS', json_encode($myphp_js ?: []));
+	// Appelé après viewtopic_modify_page_title & template->set_filenames
+	// Change the dispached template
+	function page_footer_after() {
+		if (defined('MYPHPBB_TEMPLATE')) {
+			$template = $this->request->variable ('template', '');
+			$template_name = glob ("ext/*/*/styles/prosilver/template/$template.html");
+
+			if ($template && $template_name) {
+				$tns = explode ('/', $template_name[0]);
+				$this->template->set_filenames ([
+					'body' => "@{$tns[1]}_{$tns[2]}/$template.html",
+				]);
+			}
+		}
+
+		// Remove status & stick
+		if (defined('MYPHPBB_REMOVE_STATUS_STICKY'))
+			$this->template->assign_vars(array(
+				'S_TYPE_TOGGLE' => false,
+				'S_TOPIC_TYPE_ANNOUNCE' => false,
+				'S_TOPIC_TYPE_STICKY' => false,
+			));
 
 		/* Includes language files of this extension */
 		$ns = explode ('\\', __NAMESPACE__);
@@ -129,24 +148,30 @@ class listener implements EventSubscriberInterface
 		if (defined('MYPHPBB_CREATE_POST_BUTTON') &&
 			$this->auth->acl_get('f_post', $row['forum_id']) &&
 			$row['forum_type'] == FORUM_POST)
-			$row['forum_name'] .= ' &nbsp; '.
-				'<a class="button" href="./posting.php?mode=post&f='.$row['forum_id'].'" title="Créer un nouveau sujet '.strtolower($row['forum_name']).'">Créer</a>';
+			$row['forum_name'] .= '</a> &nbsp; '.
+				'<a class="button" href="./posting.php?mode=post&f='.$row['forum_id'].'" title="Créer un nouveau sujet '.strtolower($row['forum_name']).'">Créer';
 
 		$vars['row'] = $row;
 	}
 
+	// The first hook on index.php
 	function index_modify_page_title ($vars) {
-		$uris = explode ('/?', $this->uri);
+		// Route index.php to viewtopic or viewforum if there is an argument p or t or f
+		if (defined('MYPHPBB_REDIRECT_INDEX')) {
+			if ($p = $this->request->variable ('p', 0)) {
+				header ('location: viewtopic.php?p='.$p);
+				exit ();
+			}
 
-		/* Route to viewtopic or viewforum if there is an argument p, t or f */
-		if (defined('MYPHPBB_REDIRECT_INDEX') &&
-			count ($uris) > 1 &&
-				!$this->request->variable ('template', '')) {
-				if ($this->request->variable ('p', 0) ||
-					$this->request->variable ('t', 0))
-					exit (file_get_contents ($uris[0].'/viewtopic.php?'.$uris[1]));
-				if ($this->request->variable ('f', 0))
-					exit (file_get_contents ($uris[0].'/viewforum.php?'.$uris[1]));
+			if ($t = $this->request->variable ('t', 0)) {
+				header ('location: viewtopic.php?t='.$t);
+				exit ();
+			}
+
+			if ($f = $this->request->variable ('f', 0)) {
+				header ('location: viewforum.php?t='.$f);
+				exit ();
+			}
 		}
 	}
 
@@ -158,12 +183,14 @@ class listener implements EventSubscriberInterface
 		/* Allows call posting.php without &f=forum_id */
 		if (defined('MYPHPBB_POSTING_WITHOUT_FID') &&
 			!$vars['forum_id']) {
-			$sql = 'SELECT forum_id FROM '.TOPICS_TABLE.' WHERE topic_id LIKE '.$vars['topic_id'];
+			$sql = 'SELECT forum_id FROM '.POSTS_TABLE.
+				' WHERE topic_id LIKE '.$vars['topic_id'].
+				'    OR post_id  LIKE '.$vars['post_id'];
 			$result = $this->db->sql_query($sql);
 			$row = $this->db->sql_fetchrow($result);
-			$this->db->sql_freeresult($result);
 			if ($row)
 				$vars['forum_id'] = $row['forum_id'];
+			$this->db->sql_freeresult($result);
 		}
 	}
 
@@ -244,9 +271,8 @@ class listener implements EventSubscriberInterface
 			if ($k == 'post_subject' || $k == 'subject' ||
 				$k == 'post_text' || $k == 'message' ||
 				$k == 'geom' ||
-				($k[3] == '_' && $v && $v != '00' && $v != '0' && $v != '?' && $v != 'off')) {
-			$r[] = "$k: $v";
-		}
+				(@$k[3] == '_' && $v && $v != '00' && $v != '0' && $v != '?' && $v != 'off'))
+			$r[] = $k.': '.json_encode($v);
 
 		file_put_contents (
 			$file_name,
@@ -285,6 +311,7 @@ class listener implements EventSubscriberInterface
 		}
 
 		/* DEBUG : Dump templates variables */
+		//BEST BUG dont work anymore
 		if(defined('MYPHPBB_DUMP_TEMPLATE') &&
 			$vars['name'] != 'attachment.html') {
 			ini_set('xdebug.var_display_max_depth', '1');
@@ -307,11 +334,10 @@ class listener implements EventSubscriberInterface
 			$sql = 'SELECT post_id FROM '.POSTS_TABLE.' WHERE post_text LIKE "%shortcut%>'.$shortcut.'<%shortcut%"';
 			$result = $this->db->sql_query($sql);
 			$row = $this->db->sql_fetchrow($result);
-			$this->db->sql_freeresult($result);
-
 			if ($row)
 				echo '<meta http-equiv="refresh" content="0;URL=viewtopic.php?p='.
 					$row['post_id'].'">';
+			$this->db->sql_freeresult($result);
 		}
 	}
 }

@@ -34,6 +34,8 @@ class listener implements EventSubscriberInterface
 		$this->user = $user;
 		$this->auth = $auth;
 		$this->language = $language;
+
+		$this->server = $this->request->get_super_global(\phpbb\request\request_interface::SERVER);
 	}
 
 	static public function getSubscribedEvents() {
@@ -59,6 +61,19 @@ class listener implements EventSubscriberInterface
 		ALL
 	*/
 	function page_header() {
+		// Redirect old chemineur links as https://chemineur.fr/point/1234567890
+		preg_match('|(chemineur.*)/[a-z]+/([0-9]+)|', $this->server['SCRIPT_URI'], $args);
+		if (count($args) == 3) {
+			$sql = 'SELECT topic_id FROM '.POSTS_TABLE.
+				' WHERE post_edit_reason LIKE "%'.$args[2].'%"';
+			$result = $this->db->sql_query($sql);
+			$row = $this->db->sql_fetchrow($result);
+			if($row) {
+				header('Location: https://'.$args[1].'/viewtopic.php?t='.$row['topic_id']);
+				die();
+			}
+		}
+
 		/* Includes language files of this extension */
 		$ns = explode ('\\', __NAMESPACE__);
 		$this->language->add_lang('common', $ns[0].'/'.$ns[1]);

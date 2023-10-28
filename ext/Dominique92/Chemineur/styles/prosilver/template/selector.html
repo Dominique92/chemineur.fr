@@ -1,76 +1,63 @@
-<div id="additional-selector" style="display:none">
-	<div class="selector">
-		Chemineur
-		<input type="checkbox" name="geobb-features" checked="checked" />
-		<p id="geobb-features-status"></p>
-		<ul>
-			<li><input type="checkbox" name="geobb-features" value="3" />Refuge</li>
-			<li><input type="checkbox" name="geobb-features" value="8" />Abri</li>
-			<li><input type="checkbox" name="geobb-features" value="16" />Inutilisable</li>
-			<li><input type="checkbox" name="geobb-features" value="20" />Alimentation</li>
-			<li><input type="checkbox" name="geobb-features" value="23" />Montagne</li>
-			<li><input type="checkbox" name="geobb-features" value="30" />Ferroviaire</li>
-			<li><input type="checkbox" name="geobb-features" value="40" />Transport</li>
-			<li><input type="checkbox" name="geobb-features" value="44" />Tourisme</li>
-			<li><input type="checkbox" name="geobb-features" value="58" />Naval</li>
-			<li><input type="checkbox" name="geobb-features" value="64" />Trace</li>
-		</ul>
-	</div>
+<div id="select-ext" style="display:none">
+	<hr />
+	<label>Chemineur<input type="checkbox" name="select-geobb" value="all" />
+	<span id="select-geobb-status"></span></label>
+	<label><input type="checkbox" name="select-geobb" value="3" />Refuge</label>
+	<label><input type="checkbox" name="select-geobb" value="8" />Abri</label>
+	<label><input type="checkbox" name="select-geobb" value="16" />Inutilisable</label>
+	<label><input type="checkbox" name="select-geobb" value="20" />Alimentation</label>
+	<label><input type="checkbox" name="select-geobb" value="23" />Montagne</label>
+	<label><input type="checkbox" name="select-geobb" value="30" />Ferroviaire</label>
+	<label><input type="checkbox" name="select-geobb" value="40" />Transport</label>
+	<label><input type="checkbox" name="select-geobb" value="44" />Tourisme</label>
+	<label><input type="checkbox" name="select-geobb" value="58" />Naval</label>
+	<label><input type="checkbox" name="select-geobb" value="64" />Trace</label>
 
-	<div class="selector">
-		Refuges.info
-		<input type="checkbox" name="wri-features" />
-		<p id="wri-features-status"></p>
-		<ul>
-			<li><input type="checkbox" name="wri-features" value="7" />Cabane non gardée</li>
-			<li><input type="checkbox" name="wri-features" value="10" />Refuge gardé</li>
-			<li><input type="checkbox" name="wri-features" value="9" />Gîte d'étape</li>
-			<li><input type="checkbox" name="wri-features" value="23" />Point d'eau</li>
-			<li><input type="checkbox" name="wri-features" value="6" />Sommet</li>
-			<li><input type="checkbox" name="wri-features" value="3" />Passage délicat</li>
-			<li><input type="checkbox" name="wri-features" value="28" />Bâtiment en montagne</li>
-		</ul>
-	</div>
+	<hr />
+	Refuges.info
+	<input type="checkbox" name="select-wri" value="all" />
+	<span id="select-wri-status"></span>
+	<label><input type="checkbox" name="select-wri" value="7" />Cabane non gardée</label>
+	<label><input type="checkbox" name="select-wri" value="10" />Refuge gardé</label>
+	<label><input type="checkbox" name="select-wri" value="9" />Gîte d'étape</label>
+	<label><input type="checkbox" name="select-wri" value="23" />Point d'eau</label>
+	<label><input type="checkbox" name="select-wri" value="6" />Sommet</label>
+	<label><input type="checkbox" name="select-wri" value="3" />Passage délicat</label>
+	<label><input type="checkbox" name="select-wri" value="28" />Bâtiment en montagne</label>
 
-	<div class="selector">
-		Overpass (OSM services)
-		<input type="checkbox" name="osm-features" />
-		<p id="osm-features-status"></p>
-		<ul>
-			<li><input type="checkbox" name="osm-features" value='["tourism"~"hotel|guest_house|chalet|hostel|apartment"]' />Hôtel</li>
-			<li><input type="checkbox" name="osm-features" value='["tourism"="alpine_hut"]' />Refuge gardé</li>
-			<li><input type="checkbox" name="osm-features" value='["building"="cabin"]' />Cabane non gardée</li>
-			<li><input type="checkbox" name="osm-features" value='["amenity"="shelter"]["shelter_type"="basic_hut"]' />Abri</li>
-			<li><input type="checkbox" name="osm-features" value='["tourism"="camp_site"]' />Camping</li>
-			<li><input type="checkbox" name="osm-features" value='["amenity"="drinking_water|watering_place|fountain"]+["waterway"="water_point"]+["natural"="spring"]+["man_made"="water_well"]' />Point d'eau</li>
-			<li><input type="checkbox" name="osm-features" value='["highway"="bus_stop"]' />Bus</li>
-			<li><input type="checkbox" name="osm-features" value='["amenity"="parking"]["access"!="private"]' />Parking</li>
-			<li><input type="checkbox" name="osm-features" value='["amenity"="restaurant"]' />Restaurant</li>
-			<li><input type="checkbox" name="osm-features" value='["shop"~"supermarket|convenience"]' />Alimentation</li>
-			<li><input type="checkbox" name="osm-features" value='["amenity"="toilets"]' />WC</li>
-			<li><input type="checkbox" name="osm-features" value='["amenity"="telephone"]' />Cabine téléphonique</li>
-		</ul>
-	</div>
+	<hr />
+	Overpass (OSM services)
+	<input type="checkbox" name="select-osm" value="all" />
+	<span id="select-osm-status"></span>
+	<label><input type="checkbox" name="select-osm" value='["tourism"~"hotel|guest_house|chalet|hostel|apartment"]' />
+		Hôtel</label>
+	<label><input type="checkbox" name="select-osm" value='["tourism"="alpine_hut"]' />Refuge gardé</label>
+	<label><input type="checkbox" name="select-osm" value='["building"="cabin"]' />Cabane non gardée</label>
+	<label><input type="checkbox" name="select-osm" value='["amenity"="shelter"]["shelter_type"="basic_hut"]' />
+		Abri</label>
+	<label><input type="checkbox" name="select-osm" value='["tourism"="camp_site"]' />Camping</label>
+	<label><input type="checkbox" name="select-osm" value='["amenity"="drinking_water|watering_place|fountain"]+["waterway"="water_point"]+["natural"="spring"]+["man_made"="water_well"]' />
+		Point d'eau</label>
+	<label><input type="checkbox" name="select-osm" value='["highway"="bus_stop"]' />Bus</label>
+	<label><input type="checkbox" name="select-osm" value='["amenity"="parking"]["access"!="private"]' />Parking</label>
+	<label><input type="checkbox" name="select-osm" value='["amenity"="restaurant"]' />Restaurant</label>
+	<label><input type="checkbox" name="select-osm" value='["shop"~"supermarket|convenience"]' />Alimentation</label>
+	<label><input type="checkbox" name="select-osm" value='["amenity"="toilets"]' />WC</label>
+	<label><input type="checkbox" name="select-osm" value='["amenity"="telephone"]' />Cabine téléphonique</label>
 
-	<div>
-		Pyrenees-refuges.com
-		<input type="checkbox" name="prc-features" />
-		<p id="prc-features-status"></p>
-	</div>
+	<hr />
+	Pyrenees-refuges.com
+	<input type="checkbox" name="select-prc" />
+	<span id="select-prc-status"></span>
 
-	<div>
-		Camptocamp.org
-		<input type="checkbox" name="c2c-features" />
-		<p id="c2c-features-status"></p>
-	</div>
+	<hr />
+	Camptocamp.org
+	<input type="checkbox" name="select-c2c" />
 
-	<div>
-		Alpages.info
-		<input type="checkbox" name="alp-features" />
-		<p id="alp-features-status"></p>
-		<ul>
-			<li><input type="checkbox" name="alp-features" value="4" />Cabane</li>
-			<li><input type="checkbox" name="alp-features" value="5" />Point d'eau</li>
-		</ul>
-	</div>
+	<hr />
+	Alpages.info
+	<input type="checkbox" name="select-alpages" value="all" />
+	<span id="select-alpages-status"></span>
+	<label><input type="checkbox" name="select-alpages" value="4" />Cabane</label>
+	<label><input type="checkbox" name="select-alpages" value="5" />Point d'eau</label>
 </div>
