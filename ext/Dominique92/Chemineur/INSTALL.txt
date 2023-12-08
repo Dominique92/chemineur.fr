@@ -1,4 +1,4 @@
-Bloquer chem5
+Bloquer chem4
 Créer base
 Exporter base / créer et importer
 
@@ -15,8 +15,7 @@ dans ext/cleantalk/...
 googleanalytics
 languages/de es_x_tu it
 
-myol/dist -> /assets/myol/dist
-myol/gps -> /gps
+myol/dist -> /assets
 
 Télécharger DEV
 https://github.com/DC92/dev
@@ -25,14 +24,17 @@ ext/Dominique92/Chemineur, GeoBB, Images, MyPhpBB, VTTrack
 gps/*
 
 Télécharger de chemineur.fr
+files/*
 images/smilies/*
 images/avatars/upload/*
-
-Copier dans chem5 -> chem6
-files/*
-
 config.php changer nom base
+
 /install -> Mettre à jour
 Delete /install
+
+				admin -> Paramètres de cookie -> chemineur.fr
+				Copier ext/ext2/* ext
+				admin -> Supprimer données OBSOLETES
+				Delete ex ext2/...
 
 Test VTTrack.fr

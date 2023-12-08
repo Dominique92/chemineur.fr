@@ -1,6 +1,6 @@
 Dominique92.GeoBB
 =================
-- GeoBB is a map extension for PhpBB 3.2+ forums associating points, lines or surfaces on a map to a topic in a forum.
+- GeoBB is a map extension for PhpBB 3.3+ forums associating points, lines or surfaces on a map to a topic in a forum.
 - Each forum groups elements of the same category (same icon on the map).
 - Each topic or comment in the forum can be represented by an icon, lines or areas on the map.
 
@@ -11,20 +11,20 @@ Website software of https://alpages.info
 DEPENDENCIES
 ============
 * This package includes : https://github.com/Dominique92/MyOl
-* This package is tested with : PhpBB 3.2.7
+* This package is tested with : PhpBB 3.3.5
 
 INSTALLATION
 ============
 * Prerequisites:
-	- Hosting PHP 5.4 and above & MySQL 5.7 and above
+	- Hosting PHP 7.1.3+ & MySQLi 4.1.3+
 
-* Install a PhpBB 3.2.x forum:
+* Install a PhpBB 3.3.2+ forum:
 	- Download the [complete pack] (http://www.phpbb-fr.com/telechargements/)
 	- Unzip and transfer it to the server.
 	To learn more: [doc install PhpBB] (https://www.phpbb.com/community/docs/INSTALL.html)
 	- Create an empty MySQL database or use an existing database.
 	- Go to the root of the forum from an explorer, follow the instructions.
-	- To learn more: [Forum Documentation] (https://www.phpbb.com/support/docs/en/3.2/ug/)
+	- To learn more: [Forum Documentation] (https://www.phpbb.com/support/docs/en/3.3/ug/)
 
 * Install GeoBB:
 	- Download this extension ("Download ZIP" button above)
@@ -51,11 +51,11 @@ INSTALLATION
 (optional, for developer)
 	- Style:
 	- [The basics of styles] (https://www.phpbb.com/styles/installing/)
-	- [downloadable PhpBB 3.2 Styles] (https://www.phpbb.com/customise/db/styles/board_styles-12/3.2?sk=r&sd=d)
+	- [downloadable PhpBB 3.3 Styles] (https://www.phpbb.com/customise/db/styles/board_styles-12/3.3?sk=r&sd=d)
 	- [Editing and creating styles] (https://www.phpbb.com/styles/create/)
 	- Features:
 	- [The extensions] (https://www.phpbb.com/extensions/)
-	- [Downloadable PhpBB 3.2 Extensions] (https://www.phpbb.com/customise/db/extensions-36/3.2?sk=r&sd=d)
+	- [Downloadable PhpBB 3.3 Extensions] (https://www.phpbb.com/customise/db/extensions-36/3.3?sk=r&sd=d)
 	- [Develop an extension] (https://www.phpbb.com/extensions/writing/)
 	- Display of maps:
 	- The map display is realized by a library based on Openlayers, a number of plugins and optimizations whose sources are available [HERE] (https://github.com/Dominique92/MyOl)

@@ -92,6 +92,8 @@ $sql="SELECT post_id, post_subject,
 		$where_domain.
 	($limit ? " LIMIT $limit" : "");
 
+$topic_ids = [];
+
 $result = $db->sql_query($sql);
 while ($row = $db->sql_fetchrow($result)) {
 	$altitudes = array_filter (explode (',', str_replace ('~', '', $row['geo_altitude'])));
@@ -124,26 +126,32 @@ while ($row = $db->sql_fetchrow($result)) {
 		function ($m) {
 			global $hack_positions, $altitudes;
 			// Avoid points with the same position
+
 			while (in_array ($m[1].$m[2], $hack_positions))
 				$m[1] += 0.00001; // Spread 1m right
 			$hack_positions[] = $m[1].$m[2];
 
 			// Populate geojson altitudes
-			if (count ($altitudes))
-				$m[] = array_shift($altitudes);
-
+			//BEST repopulate (ex bug ol 8.2.0)
+			//$m[] = count ($altitudes) ? array_shift($altitudes) : 0;
 			unset ($m[0]);
+			unset ($m[3]);
+
 			return implode ($m, ',');
 		},
 		$row['geojson']
 	);
 
-	$features[] = [
-		'type' => 'Feature',
-		'id' => $row['topic_id'], // Conformité with WFS specification. Avoid multiple display of the same feature
-		'geometry' => json_decode ($geojson, true),
-		'properties' => $properties,
-	];
+	// Don't provide 2 position from the same topic
+	if (!isset ($topic_ids[$row['topic_id']]))
+		$features[] = [
+			'type' => 'Feature',
+			'id' => $row['topic_id'], // Conformité with WFS specification. Avoid multiple display of the same feature
+			'geometry' => json_decode ($geojson, true),
+			'properties' => $properties,
+		];
+
+	$topic_ids[$row['topic_id']] = true;
 }
 $db->sql_freeresult($result);
 
