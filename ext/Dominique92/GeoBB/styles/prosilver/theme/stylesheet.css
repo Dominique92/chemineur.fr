@@ -12,12 +12,3 @@
 .wrap {
 	padding: 0;
 }
-
-@media print {
-	html {
-		height: initial;
-	}
-	#map {
-		padding: 0;
-	}
-}

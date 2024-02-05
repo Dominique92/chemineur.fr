@@ -12,7 +12,7 @@ if (typeof topic_category == 'string') {
 }
 
 // Desactivate trace layer when edit a trace
-if (mapType == 'line' && scriptName == 'posting')
+if (mapType == 'line' && scriptName == 'posting' && localStorage.myol_selectgeobb)
 	localStorage.myol_selectgeobb = localStorage.myol_selectgeobb.toString().replace('64', '');
 
 var geobbLayer = new myol.layer.vector.GeoBB({

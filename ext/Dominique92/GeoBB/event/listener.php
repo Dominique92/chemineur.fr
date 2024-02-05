@@ -128,29 +128,24 @@ class listener implements EventSubscriberInterface
 				$post_row['LON_LAT'] = $lls[0];
 
 				// Altitude calculation
-				//TODO BUG si open-elevation trop long
 				if (array_key_exists ('geo_altitude', $topic_row) &&
-					$topic_row['forum_image'] && //TODO BUG trace : too large for GET parameter
-					!@$topic_row['geo_altitude'])
-					if(0)
-				{
+					!@$topic_row['geo_altitude'] &&
+					count($lls[2]) == 1 ) { // Trace : too large for GET parameter
+
 					// Use free API
-					$api = 'https://api.open-elevation.com/api/v1/lookup?locations=';
-					foreach ($lls[2] AS $k=>$lat) {
-						$lon = $lls[1][$k] -= round ($lls[1][$k] / 360) * 360; // Avoid wrap
-						$api .= ($k?'|':'').$lat.','.$lon;
+					$url = 'https://api.open-elevation.com/api/v1/lookup?locations=';
+					$lat = $lls[2][0];
+					$lon = $lls[1][0] -= round ($lls[1][0] / 360) * 360; // Avoid wrap
+					@$ret = file_get_contents ($url.$lat.','.$lon);
+
+					if ($ret) {
+						$result = json_decode ($ret);
+						$topic_row['geo_altitude'] = $result->results[0]->elevation.'~';
+
+						// Update the database for the next time
+						$sql = "UPDATE phpbb_posts SET geo_altitude = '{$topic_row['geo_altitude']}' WHERE post_id = $post_id";
+						$this->db->sql_query($sql);
 					}
-					$result = json_decode (file_get_contents ($api));
-
-					// Update the template data
-					$topic_row['geo_altitude'] = '';
-					foreach ($result->results AS $k=>$v)
-						$topic_row['geo_altitude'] .= ($k?',':'').$v->elevation;
-					$topic_row['geo_altitude'] .= '~';
-
-					// Update the database for the next time
-					$sql = "UPDATE phpbb_posts SET geo_altitude = '{$topic_row['geo_altitude']}' WHERE post_id = $post_id";
-					$this->db->sql_query($sql);
 				}
 
 				// Détermination du massif par refuges.info

@@ -1,0 +1,148 @@
+<p>qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj </p>
+
+MENU :
+<div class="menu">&#9776;
+	<ul>
+		<li><a href="..">&#127968; Accueil</a></li>
+		<li>
+			&#128276; Nouvelles</a>
+			<label>Informations récentes:</label>
+			<div>
+				<a href="<?=$config_wri['sous_dossier_installation']?>nouvelles">
+				Toutes</a>
+			</div><div>
+				<a href="<?=$config_wri['sous_dossier_installation']?>nouvelles?quoi=points">
+				Points</a>
+			</div><div>
+				<a href="<?=$config_wri['sous_dossier_installation']?>nouvelles?quoi=refuges">
+				Cabanes</a>
+			</div><div>
+				<a href="<?=$config_wri['sous_dossier_installation']?>nouvelles?quoi=commentaires">
+				Commentaires</a>
+			</div><div>
+				<a href="<?=$config_wri['sous_dossier_installation']?>nouvelles?quoi=forums">
+				Forum</a>
+			</div><hr/><div>
+				<a href="<?=$config_wri['sous_dossier_installation']?>formdivaire_rss">
+				Flux RSS</a>
+			</div>
+		</li>
+		<li><a href="..">&#127968; Accueil</a></li>
+		<li>&#127968; 4444
+			<div>
+				<div>&#127968; 22222</div>
+				<div>&#127968; 33333</div>
+			</div>
+		</li>
+		<li>&#127968; 5555</li>
+		<li>&#127968; 5555</li>
+		<li>&#127968; 5555</li>
+	</ul>
+</div>
+
+&#128104;
+
+&#128100;
+refuges.info
+
+<style>
+.menu {
+	display: inline-block;
+	position: relative;
+}
+.menu:not(:hover):not(.menu-selected) > * {
+	max-height: 0;
+}
+.menu > ul {
+	position: absolute;
+	margin: 0;
+	background: #ddeeff;
+	border: 1px black sodivd;
+	padding: 0 5px;
+	list-style: none;
+	white-space: nowrap;
+	overflow: hidden;
+	transition: max-height 0.3s ease-in, opacity 0.3s ease-out;
+}
+
+
+
+
+
+.menu div > * {
+	display: none;
+}
+
+
+
+.Wmenu:not(:hover):not(.menu-selected) > * {
+	max-height: 0;
+	Wopacity: 0; /* For beauty of the transition */
+}
+.Wmenu-selected {
+	background: #ddeeff; /* Coloring the button when touch selected */
+}
+.Wmenu {
+	Wdisplay: inline-block;
+	Wfloat: left;
+	position: relative;
+}
+.Wmenu div div {
+	position: relative;
+	margin: 5px;
+}
+.Wmenu > div,
+.Wmenu div div {
+	position: absolute;
+	margin: 0;
+	padding: 0;
+}
+.Wmenu div div {
+	top: 0;
+	left: calc(100% + 5px);
+	Wdisplay: none;
+}
+.Wmenu div div:not(:hover) div {
+	left: -300%;
+	Wwidth: 0;
+	Wopacity: 0; /* For beauty of the transition */
+}
+.Wmenu div {
+}
+</style>
+
+<br/>
+<p>qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj </p>
+<p>qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj </p>
+<p>qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj </p>
+<p>qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj </p>
+<p>qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj qlmkg mqlfkj mldkfj zfj </p>
+
+<script>
+const menuEls = document.getElementsByClassName('menu'),
+menuEl= menuEls[0];
+/*DCMM*/{var _r=' ',_v=menuEl;if(typeof _v=='array'||typeof _v=='object'){for(let _i in _v)if(typeof _v[_i]!='function'&&_v[_i])_r+=_i+'='+typeof _v[_i]+' '+_v[_i]+' '+(_v[_i]&&_v[_i].CLASS_NAME?'('+_v[_i].CLASS_NAME+')':'')+"\n"}else _r+=_v;console.log(_r)}
+
+// Assign button actions
+menuEl.addEventListener('mouseover', ()=>menuEl.classList.toggle('menu-selected'));
+//menuEl.addEventListener('mouseout', action);
+menuEl.addEventListener('click', action);
+
+function action(evt) {
+/*DCMM*/{var _r=' ',_v=evt.type;if(typeof _v=='array'||typeof _v=='object'){for(let _i in _v)if(typeof _v[_i]!='function'&&_v[_i])_r+=_i+'='+typeof _v[_i]+' '+_v[_i]+' '+(_v[_i]&&_v[_i].CLASS_NAME?'('+_v[_i].CLASS_NAME+')':'')+"\n"}else _r+=_v;console.log(_r)}
+/*
+	if (evt.type == 'mouseover')
+		menuEl.classList.add('menu-hover');
+	else // mouseout | click
+		menuEl.classList.remove('menu-hover');
+*/
+	if (evt.type == 'click') // Mouse click & touch
+		;
+
+	// Close other open buttons
+	for (let el of document.getElementsByClassName('menu'))
+		if (el != menuEl)
+			el.classList.remove('menu-selected');
+}
+
+</script>

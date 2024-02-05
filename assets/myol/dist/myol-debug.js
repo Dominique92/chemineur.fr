@@ -4,7 +4,7 @@
  * This package adds many features to Openlayer https://openlayers.org/
  * https://github.com/Dominique92/myol#readme
  * Based on https://openlayers.org
- * Built 26/11/2023 16:37:53 using npm run build from the src/... sources
+ * Built 05/02/2024 20:24:52 using npm run build from the src/... sources
  * Please don't modify it : modify src/... & npm run build !
  */
 
@@ -62618,8 +62618,8 @@ var myol = (function () {
       });
 
       this.subMenuEl.querySelectorAll('a, input')
-        .forEach(el => ['click', 'change'].forEach(tag =>
-          el.addEventListener(tag, evt =>
+        .forEach(el => ['click', 'change'].forEach(type =>
+          el.addEventListener(type, evt =>
             this.subMenuAction(evt)
           )));
 
@@ -62747,9 +62747,9 @@ var myol = (function () {
   }
 
   var subMenuHTML$3 = '\
-  <label><a mime="application/gpx+xml">GPX</a></label>\
-  <label><a mime="vnd.google-earth.kml+xml">KML</a></label>\
-  <label><a mime="application/json">GeoJSON</a></label>';
+  <p><a mime="application/gpx+xml">GPX</a></p>\
+  <p><a mime="vnd.google-earth.kml+xml">KML</a></p>\
+  <p><a mime="application/json">GeoJSON</a></p>';
 
   var subMenuHTML_fr$3 = '\
   <p>Cliquer sur un format ci-dessous pour obtenir\
@@ -62762,7 +62762,9 @@ var myol = (function () {
    */
 
 
-  // Virtual class to factorise XYZ layers code
+  /**
+   * Virtual class to factorise XYZ layers code
+   */
   class XYZ extends ol.layer.Tile {
     constructor(options) {
       super({
@@ -62772,7 +62774,38 @@ var myol = (function () {
     }
   }
 
-  // OpenStreetMap & co
+  /**
+   * Simple layer to be used when a layer is out of extent
+   * API : https://api-docs.carto.com/
+   */
+  class Positron extends XYZ {
+    constructor(options) {
+      super({
+        url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        attributions: '<a href="https://carto.com/attribution/">CartoDB</a>',
+        ...options,
+      });
+    }
+  }
+
+  /**
+   * Simple layer to be used when a layer is out of scope
+   */
+  class NoTile extends XYZ {
+    constructor(options) {
+      super({
+        url: 'https://ecn.t0.tiles.virtualearth.net/tiles/r000000000000000000.jpeg?g=1',
+        attributions: 'Out of zoom',
+        ...options,
+      });
+    }
+  }
+
+  /**
+   * OpenStreetMap & co
+   * Map : https://www.openstreetmap.org/
+   * API : https://wiki.openstreetmap.org/wiki/API/
+   */
   class OpenStreetMap extends ol.layer.Tile {
     constructor(options) {
       super({
@@ -62782,6 +62815,11 @@ var myol = (function () {
     }
   }
 
+  /**
+   * Nice OSM style
+   * Map : opentopomap.org
+   * API : https://www.opentopodata.org/#public-api
+   */
   class OpenTopo extends OpenStreetMap {
     constructor() {
       super({
@@ -62793,57 +62831,62 @@ var myol = (function () {
     }
   }
 
+  /**
+   * Maps of https://www.refuges.info/
+   * Map : https://maps.refuges.info/
+   * Doc : https://wiki.openstreetmap.org/wiki/Hiking/mri
+   */
   class MRI extends OpenStreetMap {
     constructor() {
       super({
         url: 'https://maps.refuges.info/hiking/{z}/{x}/{y}.png',
         maxZoom: 18,
-        attributions: '<a href="//wiki.openstreetmap.org/wiki/Hiking/mri">Refuges.info</a>',
+        attributions: '<a href="https://wiki.openstreetmap.org/wiki/Hiking/mri">Refuges.info</a>',
       });
     }
   }
 
+  /**
+   * Germany maps
+   * Map : https://www.kompass.de/wanderkarte/
+   * Doc : https://www.kompass.de/
+   */
   class Kompass extends OpenStreetMap { // Austria
     constructor(options = {}) {
       super({
+        hidden: !options.key && options.subLayer != 'osm', // For LayerSwitcher
         url: options.key ?
           'https://map{1-4}.kompass.de/{z}/{x}/{y}/kompass_' + options.subLayer + '?key=' + options.key : // Specific
           'https://map{1-5}.tourinfra.com/tiles/kompass_' + options.subLayer + '/{z}/{x}/{y}.png', // No key
         maxZoom: 17,
-        hidden: !options.key && options.subLayer != 'osm', // For LayerSwitcher
-        attributions: '<a href="http://www.kompass.de/livemap/">KOMPASS</a>',
-        ...options,
-      });
-    }
-  }
-
-  class Thunderforest extends OpenStreetMap {
-    constructor(options = {}) {
-      super({
-        url: 'https://{a-c}.tile.thunderforest.com/' + options.subLayer + '/{z}/{x}/{y}.png?apikey=' + options.key,
-        maxZoom: 22,
-        // subLayer: 'outdoors', ...
-        // key: Get a key at https://manage.thunderforest.com/dashboard
-        hidden: !options.key, // For LayerSwitcher
-        attributions: '<a href="http://www.thunderforest.com">Thunderforest</a>',
-        ...options, // Include key
-      });
-    }
-  }
-
-  class Positron extends XYZ {
-    constructor(options) {
-      super({
-        url: 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
-        attributions: '<a href="https://carto.com/attribution/#basemaps">CartoDB</a>',
+        attributions: '<a href="https://www.kompass.de/">Kompass</a>',
         ...options,
       });
     }
   }
 
   /**
+   * OSM originated maps
+   * Doc : https://www.thunderforest.com/maps/
+   * Key : https://manage.thunderforest.com/dashboard
+   */
+  class Thunderforest extends OpenStreetMap {
+    constructor(options = {}) {
+      super({
+        hidden: !options.key, // For LayerSwitcher
+        url: 'https://{a-c}.tile.thunderforest.com/' + options.subLayer + '/{z}/{x}/{y}.png?apikey=' + options.key,
+        maxZoom: 22,
+        // subLayer: 'outdoors', ...
+        // key: '...',
+        attributions: '<a href="https://www.thunderforest.com/">Thunderforest</a>',
+        ...options, // Include key
+      });
+    }
+  }
+
+  /**
    * IGN France
-   * doc : https://geoservices.ign.fr/services-web
+   * Doc, API & key : https://geoservices.ign.fr/services-web
    */
   class IGN extends ol.layer.Tile {
     constructor(options = {}) {
@@ -62860,11 +62903,10 @@ var myol = (function () {
         source: new ol.source.WMTS({
           // WMTS options
           url: 'https://wxs.ign.fr/' + options.key + '/wmts',
-          layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', // Top 25
           style: 'normal',
           matrixSet: 'PM',
           format: 'image/jpeg',
-          attributions: '&copy; <a href="http://www.geoportail.fr/" target="_blank">IGN</a>',
+          attributions: '&copy; <a href="https://www.geoportail.gouv.fr/" target="_blank">IGN</a>',
           tileGrid: new ol.tilegrid.WMTS({
             origin: [-20037508, 20037508],
             resolutions: IGNresolutions,
@@ -62872,8 +62914,6 @@ var myol = (function () {
           }),
 
           // IGN options
-          // key, Get your own (free) IGN key at https://geoservices.ign.fr/
-
           ...options, // Include key & layer
         }),
         ...options, // For layer limits
@@ -62917,7 +62957,6 @@ var myol = (function () {
             matrixIds: matrixIds,
           }),
           requestEncoding: 'REST',
-          crossOrigin: 'anonymous',
         })),
 
         ...options, // For layer limits
@@ -62926,7 +62965,9 @@ var myol = (function () {
   }
 
   /**
-   * Spain
+   * Spain IGN
+   * Map : https://www.ign.es/iberpix/visor
+   * API : https://api-maps.ign.es/
    */
   class IgnES extends XYZ {
     constructor(options) {
@@ -62935,7 +62976,7 @@ var myol = (function () {
         server: 'mapa-raster',
         subLayer: 'MTN',
         maxZoom: 20,
-        attributions: '&copy; <a href="http://www.ign.es/">IGN España</a>',
+        attributions: '&copy; <a href="https://www.ign.es/">IGN España</a>',
         ...options,
       };
 
@@ -62953,13 +62994,15 @@ var myol = (function () {
 
   /**
    * Italy IGM
+   * Doc : https://gn.mase.gov.it/
+   * Map : http://www.pcn.minambiente.it/viewer/
    */
   class IGM extends ol.layer.Tile {
     constructor() {
       super({
         source: new ol.source.TileWMS({
           url: 'https://chemineur.fr/assets/proxy/?s=minambiente.it', // Not available via https
-          attributions: '&copy <a href="http://www.pcn.minambiente.it/viewer/">IGM</a>',
+          attributions: '&copy <a href="https://gn.mase.gov.it/">IGM</a>',
         }),
         maxResolution: 120,
         extent: [720000, 4380000, 2070000, 5970000],
@@ -62989,7 +63032,7 @@ var myol = (function () {
 
   /**
    * Ordnance Survey : Great Britain
-   * key: Get your own (free) key at https://osdatahub.os.uk/
+   * API & key : https://osdatahub.os.uk/
    */
   class OS extends XYZ {
     constructor(options = {}) {
@@ -62999,7 +63042,7 @@ var myol = (function () {
         minZoom: 7,
         maxZoom: 16,
         extent: [-1198263, 6365000, 213000, 8702260],
-        attributions: '&copy <a href="https://explore.osmaps.com">UK Ordnancesurvey maps</a>',
+        attributions: '&copy <a href="https://explore.osmaps.com/">UK Ordnancesurvey maps</a>',
 
         ...options,
       };
@@ -63016,6 +63059,9 @@ var myol = (function () {
 
   /**
    * ArcGIS (Esri)
+   * Map : https://www.arcgis.com/home/webmap/viewer.html
+   * API : https://developers.arcgis.com/javascript/latest/
+   * No key
    */
   class ArcGIS extends XYZ {
     constructor(options) {
@@ -63023,7 +63069,7 @@ var myol = (function () {
         host: 'https://server.arcgisonline.com/ArcGIS/rest/services/',
         subLayer: 'World_Imagery',
         maxZoom: 19,
-        attributions: '&copy; <a href="https://www.arcgis.com/home/webmap/viewer.html">ArcGIS (Esri)</a>',
+        attributions: '&copy; <a href="https://www.arcgis.com/">ArcGIS (Esri)</a>',
         ...options,
       };
 
@@ -63036,14 +63082,15 @@ var myol = (function () {
 
   /**
    * Maxbox (Maxar)
-   * Get your own key at https://www.mapbox.com/
+   * Key : https://www.mapbox.com/
    */
   class Maxbox extends XYZ {
     constructor(options = {}) {
       super({
+        hidden: !options.key, // For LayerSwitcher
         url: 'https://api.mapbox.com/v4/' + options.tileset + '/{z}/{x}/{y}@2x.webp?access_token=' + options.key,
         // No maxZoom
-        attributions: '&copy; <a href="https://mapbox.com/">Mapbox</a>',
+        attributions: '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
       });
     }
   }
@@ -63070,16 +63117,17 @@ var myol = (function () {
   /**
    * Bing (Microsoft)
    * Doc: https://docs.microsoft.com/en-us/bingmaps/getting-started/
-   * Get your own (free) key at https://www.bingmapsportal.com
+   * Key : https://www.bingmapsportal.com/
    */
   let Bing$1 = class Bing extends ol.layer.Tile {
     constructor(options = {}) {
       super({
+        hidden: !options.key, // For LayerSwitcher
+
         // Mandatory
         // 'key',
         imagerySet: 'Road',
 
-        hidden: !options.key, // For LayerSwitcher
         // No explicit zoom
         // attributions, defined by ol.source.BingMaps
 
@@ -63095,27 +63143,54 @@ var myol = (function () {
     }
   };
 
-  class NoTile extends XYZ {
-    constructor(options) {
+  /**
+   * RGB elevation (Mapbox)
+   * Each pixel color encode the elevation
+   * Doc: https://docs.mapbox.com/data/tilesets/guides/access-elevation-data/
+   * elevation = -10000 + (({R} * 256 * 256 + {G} * 256 + {B}) * 0.1)
+   * Key : https://www.mapbox.com/
+   */
+  class MapboxElevation extends Maxbox {
+    constructor(options = {}) {
       super({
-        url: 'https://ecn.t0.tiles.virtualearth.net/tiles/r000000000000000000.jpeg?g=13897&mkt=en-us&shading=hill',
-        attributions: 'Out of zoom',
+        hidden: !options.key, // For LayerSwitcher
         ...options,
+        tileset: 'mapbox.terrain-rgb',
       });
     }
   }
 
-  // Tile layers examples
+  /**
+   * RGB elevation (MapTiler)
+   * Doc: https://cloud.maptiler.com/tiles/terrain-rgb-v2/
+   * Doc: https://documentation.maptiler.com/hc/en-us/articles/4405444055313-RGB-Terrain-by-MapTiler
+   * elevation = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1
+   * Key : https://cloud.maptiler.com/account/keys/
+   */
+  /*// Opportunity : backup of Maxbox elevation 
+  export class MapTilerElevation extends XYZ {
+    constructor(options = {}) {
+      super({
+        hidden: !options.key, // For LayerSwitcher
+        url: 'https://api.maptiler.com/tiles/terrain-rgb/{z}/{x}/{y}.png?key=' + options.key,
+        maxZoom: 12,
+        attributions: '<a href="https://www.maptiler.com/copyright/"">&copy; MapTiler</a> ' + '<a href="https://www.openstreetmap.org/copyright"">&copy; OpenStreetMap contributors</a>',
+        ...options,
+      });
+    }
+  }*/
+
+  /**
+   * Tile layers examples
+   */
   function collection$2(options = {}) {
     return {
-      'OSM fr': new OpenStreetMap({
-        url: 'https://{a-c}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-      }),
-      'OpenTopo': new OpenTopo(),
+      'OSM': new OpenStreetMap(),
       'OSM outdoors': new Thunderforest({
         ...options.thunderforest, // Include key
         subLayer: 'outdoors',
       }),
+      'OpenTopo': new OpenTopo(),
       'OSM transports': new Thunderforest({
         ...options.thunderforest, // Include key
         subLayer: 'transport',
@@ -63125,7 +63200,10 @@ var myol = (function () {
       }),
       'Refuges.info': new MRI(),
 
-      'IGN TOP25': new IGN(options.ign), // options include key
+      'IGN TOP25': new IGN({
+        ...options.ign, // Include key
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
+      }),
       'IGN V2': new IGN({
         layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
         key: 'essentiels',
@@ -63192,10 +63270,6 @@ var myol = (function () {
         extent: [-580000, 506000, 1070000, 6637000],
         minZoom: 6,
       }),
-      /*'IGN Cassini': new IGN({ //BEST BUG what key for Cassini ?
-      	...options.ign,
-      	layer: 'GEOGRAPHICALGRIDSYSTEMS.CASSINI',
-      }),*/
     };
   }
 
@@ -63203,11 +63277,13 @@ var myol = (function () {
     return {
       ...collection$2(options),
 
-      'OSM': new OpenStreetMap(),
-      'OSM orthos FR': new OpenStreetMap({
-        url: 'http://wms.openstreetmap.fr/tms/1.0.0/tous_fr/{z}/{x}/{y}',
+      'OSM fr': new OpenStreetMap({
+        url: 'https://{a-c}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+        //BEST BUG Ensure CORS response header values are valid
       }),
-      'Positron': new Positron(),
+      'OSM orthos FR': new OpenStreetMap({
+        url: 'https://wms.openstreetmap.fr/tms/1.0.0/tous_fr/{z}/{x}/{y}',
+      }),
 
       'ThF cycle': new Thunderforest({
         ...options.thunderforest, // Include key
@@ -63267,6 +63343,16 @@ var myol = (function () {
       'Google hybrid': new Google({
         subLayers: 's,h',
       }),
+
+      'IGN Cassini': new IGN({
+        ...options.ign,
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.CASSINI',
+        key: 'an7nvfzojv5wa96dsga5nk8w', //BEST use owner key
+      }),
+
+      'MapBox elevation': new MapboxElevation(options.mapbox), // options include key
+
+      'Positron': new Positron(),
       'No tile': new NoTile(),
       'Blank': new ol.layer.Tile(),
     };
@@ -63282,6 +63368,7 @@ var myol = (function () {
     IgnES: IgnES,
     Kompass: Kompass,
     MRI: MRI,
+    MapboxElevation: MapboxElevation,
     Maxbox: Maxbox,
     NoTile: NoTile,
     OS: OS,
@@ -63305,7 +63392,7 @@ var myol = (function () {
     constructor(options) {
       // High resolution background layer
       super({
-        minResolution: 10,
+        minResolution: 20,
         visible: false,
 
         ...options,
@@ -65265,69 +65352,46 @@ var myol = (function () {
     subMenuAction(evt) {
       const map = this.getMap(),
         mapEl = map.getTargetElement(),
-        poElcs = this.element.querySelectorAll('input:checked'), // Selected orientation inputs
-        orientation = poElcs.length ? parseInt(poElcs[0].value) : 0; // Selected orientation or portrait
+        poEl = this.element.querySelector('input:checked'), // Selected orientation inputs
+        orientation = poEl && poEl.value == '1' ? 'landscape' : 'portrait';
 
-      // Change map size & style
-      mapEl.style.maxHeight = mapEl.style.maxWidth = mapEl.style.float = 'none';
-      mapEl.style.width = orientation == 0 ? '208mm' : '295mm';
-      mapEl.style.height = orientation == 0 ? '295mm' : '208mm';
-      map.setSize([mapEl.clientWidth, mapEl.clientHeight]);
+      // Fix resolution to an available tiles resolution
+      map.getView().setConstrainResolution(true);
+
+      // Set or replace the page style
+      if (document.head.lastChild.textContent.match(/^@page{size:/))
+        document.head.lastChild.remove();
+      document.head.insertAdjacentHTML('beforeend', '<style>@page{size: A4 ' + orientation + '}</style>');
 
       // Parent the map to the top of the page
       document.body.appendChild(mapEl);
-
-      // Set style
-      const styleSheet = document.createElement('style');
-      styleSheet.type = 'text/css';
-      styleSheet.innerText = '\
-@page {\
-  size: ' + (orientation == 0 ? 'portrait' : 'landscape') + ';\
-}\
-body>*:not(#' + mapEl.id + '),\
-.ol-control:not(.ol-zoom):not(.ol-attribution):not(.myol-button-print) {\
-  display: none;\
-}\
-.myol-button-switcher {\
-  display: block !important;\
-  float: left !important;\
-}\
-.myol-button-switcher>div {\
-  left: 65px;\
-  right: initial;\
-}';
-      document.head.appendChild(styleSheet);
-
-      // Finer zoom not dependent on the baselayer's levels
-      map.getView().setConstrainResolution(false);
-      map.addInteraction(new ol.interaction.MouseWheelZoom({
-        maxDelta: 0.1,
-      }));
+      mapEl.className = 'myol-print-' + orientation;
 
       // Finally print if required
-      if (evt.target.id == 'print')
-        map.once('rendercomplete', () => {
+      if (evt.target.id == 'myol-print') {
+        if (poEl) { // If a format is set, the full page is already loaded
           window.print();
           location.reload();
-        });
+        } else // Direct print : wait for full format rendering
+          map.once('rendercomplete', () => {
+            window.print();
+            location.reload();
+          });
+      }
     }
   }
 
   var subMenuHTML = '\
-  <label><input type="radio" value="0">Portrait</label>\
-  <label><input type="radio" value="1">Landscape</label>\
-  <label><a id="print">Print</a></label>\
-  <label><a onclick="location.reload()">Cancel</a></label>';
+  <label><input type="radio" name="myol-print-orientation" value="0">Portrait</label>\
+  <label><input type="radio" name="myol-print-orientation" value="1">Landscape</label>\
+  <p><a id="myol-print">Print</a></p>',
 
-  var subMenuHTML_fr = '\
-  <p>Pour imprimer la carte:</p>\
-  <p>-Choisir portrait ou paysage,</p>\
-  <p>-zoomer et déplacer la carte dans le format,</p>\
-  <p>-imprimer.</p>' +
+    subMenuHTML_fr = '\
+  <p style="float:right" title="Cancel"><a onclick="location.reload()">&#10006;</a></p>\
+  <p style="width:175px">Choisir le format et recadrer</p>' +
     subMenuHTML
     .replace('Landscape', 'Paysage')
-    .replace('Print', 'Imprimer')
-    .replace('Cancel', 'Annuler');
+    .replace('Print', 'Imprimer');
 
   /**
    * This file defines the myol.control exports
@@ -73567,6 +73631,7 @@ body>*:not(#' + mapEl.id + '),\
       // Save the current status
       if (this.safeName && this.getSelection().length)
         localStorage[this.safeName] = this.getSelection().join(',');
+      //BEST BUG : don't recover values including a ,
       else
         delete localStorage[this.safeName];
 
@@ -73606,7 +73671,6 @@ body>*:not(#' + mapEl.id + '),\
           feature.getId() / 9 % 1, // 44 px hight frame
         ] : [0.5, 0.5],
         src: properties.icon, // 24 * 24 icons
-        //BEST ??? crossOrigin: 'anonymous',
       }) : null,
 
       // Lines
@@ -73670,7 +73734,7 @@ body>*:not(#' + mapEl.id + '),\
           color: 'white',
         }),
       }),
-      //TODO laisser le texte sur les clusters < 3 icônes
+      //BEST laisser le texte sur les clusters < 3 icônes
       text: new ol.style.Text({
         text: feature.getProperties().cluster.toString(),
         font: '12px Verdana',
@@ -74245,8 +74309,7 @@ body>*:not(#' + mapEl.id + '),\
   }
 
   // CampToCamp.org
-  /*//TODO Don't work / to be redesigned
-  export class C2C extends MyVectorLayer {
+  class C2C extends MyVectorLayer {
     constructor(options) {
       super({
         host: 'https://api.camptocamp.org/',
@@ -74259,11 +74322,10 @@ body>*:not(#' + mapEl.id + '),\
       });
 
       this.format.readFeatures = json => {
-        const features = [],
-          objects = JSON.parse(json);
+        const features = [];
 
-        for (let o in objects.documents) {
-          const properties = objects.documents[o];
+        for (let p in json.documents) {
+          const properties = json.documents[p];
 
           features.push({
             id: properties.document_id,
@@ -74290,9 +74352,10 @@ body>*:not(#' + mapEl.id + '),\
       return {
         _path: 'waypoints',
         wtyp: this.selector.getSelection(),
+        limit: 100, // C2C max limit
       };
     }
-  }*/
+  }
 
   /**
    * OSM XML overpass POI layer
@@ -74421,7 +74484,7 @@ body>*:not(#' + mapEl.id + '),\
     return [
       new WRI(options.wri),
       new PRC(options.prc),
-      //new C2C(options.c2c),
+      new C2C(options.c2c),
       new Overpass(options.osm),
       new Chemineur(options.chemineur),
       new Alpages(options.alpages),
@@ -74431,6 +74494,7 @@ body>*:not(#' + mapEl.id + '),\
   var vectorLayerCollection = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Alpages: Alpages,
+    C2C: C2C,
     Chemineur: Chemineur,
     GeoBB: GeoBB,
     Overpass: Overpass,

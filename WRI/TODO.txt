@@ -1,0 +1,102 @@
+BUGS
+====
+//TODO BUG connexion sous FF : efface le pavé connexion aprés avoir rempli avec les infos de connexion
+//TODO BUG Déconnexion KO à partir de la page de modération (problème de racine)
+//TODO BUG modifier cette fiche : ne réaffiche pas les coordonnées (FF)
+//TODO Si vous spécifiez overflow: visible sur "img", "video" et "canvas", ces tags risquent de générer du contenu visuel en dehors des limites de l'élément.
+
+REMARQUES MENU
+==============
+//BEST standard titre bandeau page suivant vue y compris forum
+//BEST standard menus 16px sauf logo
+//BEST standard menus bouton droit
+//BEST ombre sous menus
+
+EVOLUTION PAGE ACCUEIL
+======================
+//BEST Réduction des messages https://www.refuges.info/forum/viewtopic.php?f=2&t=9460
+//BEST Ergonomie https://www.refuges.info/forum/viewtopic.php?f=2&t=10687
+//BEST https://www.refuges.info/forum/viewtopic.php?f=1&t=11177
+Accueil carte
+	menu
+	carte / groupes de points
+	liste (ou choix des types de points)
+Point
+
+PWA ?
+=====
+//BEST https://bitsofco.de/what-self-skipwaiting-does-to-the-service-worker-lifecycle/ 
+//BEST https://stackoverflow.com/questions/59207110/in-a-pwa-is-there-a-way-to-check-for-a-waiting-service-worker-upgrade 
+//BEST https://www.educative.io/blog/5-minute-guide-to-push-notifications-in-pwa#implement 
+//BEST https://github.com/phpbb-seo/pwa/blob/main/event/main_listener.php 
+
+EVOLUTIONS
+==========
+//BEST page forum d'une cabane : lien (Cliquer ici pour retourner sur la fiche de...)
+//BEST Ordre des posts https://www.refuges.info/forum/viewtopic.php?f=2&t=10326
+//BEST N'afficher que les massifs contenant des points
+//BEST Revoir les symboles GARMIN (Ajouter un symbole pour les clusters)
+//BEST Revoir politique de dates d'expiration de fichiers. Spécialement vignettes / api/polygones?type_polygon=1
+//BEST ? FORM.wri LABEL { /* sans la classe WRI, ca fait foirer le forum PHPBB , et oui */
+//BEST ce text est paramétrable depuis le wiki
+//BEST https://www.refuges.info/forum/viewtopic.php?f=2&t=9194#p31335 : plus épuré des textes rébarbatifs
+//BEST https://www.refuges.info/forum/viewtopic.php?f=2&t=10687
+//BEST https://www.refuges.info/forum/viewtopic.php?f=2&t=11360
+//BEST La saisie en BBcode n'est plus fréquente, et nécessite donc de l'apprendre : une piste est d'utiliser du Markdown au gout du jour
+//BEST rendre WRI au gout du jour : une mise en forme plus soignée, un choix de charte graphique (cohérence sur les polices, logos, icônes, couleurs), retirer les indices d'anciennes technologies (nouveaux smileys), uniformiser le thème phpBB et celui de WRI.
+
+//BEST Couleur des pictos cabanes dont on n’a pas d’éléments pour dire qu’elles sont destinées à accueillir des randonneurs
+-	Picto cabane ou abri avec un 0 (comme aujourd’hui) similaire aux pictos de celles faites pour accueillir des randonneurs
+-	Picto cabane ou abri gris, mur noir avec 0 (urgence seulement) ou ? (on ne sait pas) ou X (fermé)
+//BEST Pictos geocaching
+//BEST Les données externes (PRC...) pourraient être mieux intégrées, en imaginant les intégrer directement aux fiches.
+
+//BEST Informations affichées pour les cabanes non destinées à y dormir
+-	Nom, position (carte), propriétaire / accessibilité, forum + bandeau expliquant que cette cabane n’est pas destinée à y dormir
+Auteur demande corrections
+
+//BEST dualité fiche-forum
+-	Fusion commentaire / forum : notion de post descriptif
+-	il arrive souvent que les contributeurs se perdent entre forum et commentaires, le paragraphe n'étant pas bien lu. Une piste serait d'intégrer le fil du forum à la page point.
+
+Sur la visualisation d'un point, il arrive souvent que les contributeurs se perdent entre forum et commentaires, le paragraphe n'étant pas bien lu. Une piste serait d'intégrer le fil du forum à la page point.
+De manière générale, nous avons souvent mit en place des textes explicatifs pour apporter des précisions avec des liens rebondissants vers le wiki. Cette lecture peut décourager. Une option est d'utiliser plus fréquemment des icônes.
+Sur le forum, il arrive souvent que des questions soient posées en double, les recherches n'étant pas correctement effectuées.
+Les données externes (PRC...) pourraient être mieux intégrées, en imaginant les intégrer directement aux fiches.
+Le formulaire n'est accessible facilement que depuis un ordinateur, et malheureusement l'ergonomie de Facebook ou autres rend la chose beaucoup plus aisés sur des groupes spécialisés dans ces espaces.
+La saisie en BBcode n'est plus fréquente, et nécessite donc de l'apprendre : une piste est d'utiliser du Markdown au gout du jour.
+L'interprétation du "nouveau bbcode" plus riche semble moins bien passer coté site pour ce qui est des quotes
+	https://dom.refuges.info/forum/viewtopic.php?f=4&t=6335&p=19629
+
+TOOLS
+=====
+? historique posts phpbb (ext/...)
+	Paramétres inclusion posts dans points -> config.php
+Liste users surs / utilitaire scan liens
+Déraciner le wiki / le mettre dans le forum
+Install ne vas plus marcher si config.php est là !
+
+WRI API
+=======
+Langage ACP / ADM, ... (menu haut page)
+Bug remontée MultiPolygon / default : null
+Erreur: sur geom vide dans un polynome
+Durée cache réglable
+Passage template <?...?> des vues/api // vues/api => repli si pas de $polygone->geometrie !!
+
+WRI HORS CODE
+=============
+Inclure scan_liens.php dans /ressources/outils/...
+Mettre le format date sur tous les users
+Faire une fiche de tests
+
+AIDE TEST
+=========
+MultiPolygon multiple => massif 3116 (plus dans la base de tests WRI)
+MultiPolygon avec trou => massif 3127
+
+TRANSFERT WRI
+=============
+Download refuges.sql.gz
+Unpack it
+Change OWNER TO refuges -> OWNER TO cado1118_pg
