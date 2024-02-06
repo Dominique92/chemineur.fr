@@ -40,8 +40,8 @@ var geobbLayer = new myol.layer.vector.GeoBB({
 		}),
 		controls: [
 			...myol.control.collection({
-				download: {
-					savedLayer: editorLayer,
+				load: {
+					receivingLayer: editorLayer,
 				}
 			}),
 			new myol.control.LayerSwitcher({

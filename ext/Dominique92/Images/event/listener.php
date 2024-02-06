@@ -157,7 +157,7 @@ class listener implements EventSubscriberInterface
 			$sql = implode (' ', [
 				'UPDATE '.ATTACHMENTS_TABLE,
 				'SET exif = "'.implode (' ', $info ?: ['~']).'",',
-					'filetime = '.$filetime,
+					'filetime = '.($filetime ?: 0),
 				'WHERE attach_id = '.$attachment['attach_id']
 			]);
 			$this->db->sql_query ($sql);

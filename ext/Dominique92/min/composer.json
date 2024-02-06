@@ -1,0 +1,17 @@
+{
+	"name": "Dominique92/min",
+	"type": "phpbb-extension",
+	"description": "TO BE DELETED",
+	"version": "1.0.1",
+	"license": "GPL-2.0",
+	"authors": [{
+		"name": "Dominique Cavailhez",
+		"role": "Developer"
+	}],
+	"extra": {
+		"display-name": "OBSOLETE",
+		"soft-require": {
+			"phpbb/phpbb": ">=3.1.0"
+		}
+	}
+}
