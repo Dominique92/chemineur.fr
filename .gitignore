@@ -1,1 +1,8 @@
-node_modules
+assets/cookieconsent
+assets/css
+assets/fonts
+assets/javascript
+assets/plupload
+ext/cleantalk
+ext/phpbb
+ext/index.htm
