@@ -50,7 +50,7 @@ $couleurs[] = $couleurs[] = null;
 
 // Génération du fichier SVG
 header ('Content-type: image/svg+xml');
-header ('Cache-Control: max-age=86000');
+header ('Cache-Control: max-age=10000'); // 3 h
 header ('Access-Control-Allow-Headers: *');
 header ('Access-Control-Allow-Origin: *');
 
