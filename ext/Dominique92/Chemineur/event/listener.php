@@ -243,9 +243,9 @@ class listener implements EventSubscriberInterface
 		// Assigne le nouveau forum pour la création
 		$vars['forum_id'] = request_var('to_forum_id', $vars['forum_id']);
 
-		// Le bouge
+		// Le bouge et le resynchronise
 		if ($vars['mode'] == 'edit' && // S'il existe déjà !
 			$vars['forum_id'] != $vars['forum_id'])
-			move_topics([$vars['post_id']], $vars['forum_id']);
+			move_topics([$vars['post_id']], $vars['forum_id'], true);
 	}
 }

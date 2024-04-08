@@ -1,0 +1,21 @@
+//TODO BUG ferme menu du haut quand quitte la zone de carte (petites fenetres)
+//BEST Token psw {S_LOGIN_REDIRECT}
+//BEST Ne pas afficher les points en doublon (flux wri, prc, c2c)
+//BEST Stockage images sur plus d'1 répertoire => ? plugin ?
+//BEST Mettre les media print dans print.css
+//BEST Pouvoir inclure : Les caractères ( ) sont interdits dans les URLs, il faut les remplacer respectivement par %28 et %29
+//BEST Erreur type de caractères randos Lozerre
+//BEST Récup trace diaporamas + chemins chem2
+//BEST EDIT.log => Trace supprimer le sujet
+//BEST ext/GeoBB : ajouter les coordonnées au template print
+//BEST Scan des liens morts
+
+//BEST Ajouter bouton permutation sur page point chem / View film + permutation
+//BEST Permutations POSTS dans le template modération : déplacer les fichiers la permutation des posts => event/mcp_topic_postrow_post_before.html
+//BEST Inverser l'ordre des posts / SPECIALEMENT DIAPORAMAS !
+
+//BEST AIDE CHEM
+Un sujet est actif quand il y a eu des contributions récentes.
+Création / Edition de traces
+Ici, la COPPA est la "Children's Online Privacy Protection Act", une loi américaine pour protéger la vie privée des mineurs de moins de 13 ans. J'essayerai d'enlever les mentions dans les formulaires.
+Consulter l'historique des éditions
