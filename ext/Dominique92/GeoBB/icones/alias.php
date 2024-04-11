@@ -1,5 +1,5 @@
 <?php
-$colors = ['black','green','blue','red','grey','yellow','white',
+$colors = ['black','green','lightgreen','blue','red','grey','yellow','white',
 	'maroon','orange','blanchedalmond','lightgrey','violet','purple','turquoise'];
 
 // Tableau de correspondance des icônes
@@ -44,8 +44,9 @@ $alias = [
 	'restaurant' => 'cabane_white_maroon_a9832.5',
 	'rond_point' => 'triangle_a8634.5.22',
 	'ruine' => 'triangle_grey_black_manqueunmur',
-	'site_remarquable' => 'rond_yellow_a9728.5.17',
 	'site_industriel' => 'cabane_white_maroon_a9874.6',
+	'site_historique' => 'rond_lightgreen_a10035.5.17',
+	'site_remarquable' => 'rond_yellow_a9728.5.17',
 //	'sommet' => 'sommet',
 	'tunnel' => 'arc_black_grey_loco',
 	'urbanisme' => 'rond_blanchedalmond_a9751.6.16',
