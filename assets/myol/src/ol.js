@@ -9,6 +9,7 @@ import Map from 'ol/Map';
 import OSMXML from 'ol/format/OSMXML';
 import View from 'ol/View';
 import WMTSTileGrid from 'ol/tilegrid/WMTS';
+import * as condition from 'ol/events/condition';
 import * as control from 'ol/control';
 import * as coordinate from 'ol/coordinate';
 import * as extent from 'ol/extent';
@@ -27,6 +28,11 @@ import * as util from 'ol/util';
 export default {
   control: control,
   coordinate: coordinate,
+  events: {
+    condition: {
+      pointerMove: condition.pointerMove,
+    },
+  },
   extent: extent,
   Feature: Feature,
   format: { // Not all formats are used & the total file is big

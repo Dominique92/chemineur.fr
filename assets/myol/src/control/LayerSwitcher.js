@@ -23,14 +23,15 @@ export class LayerSwitcher extends Button {
 
     // Filter null or hidden layers
     this.layers = {};
-    for (let name in options.layers)
+    for (const name in options.layers)
       if (options.layers[name] && !options.layers[name].getProperties().hidden)
         this.layers[name] = options.layers[name];
 
     // Get baselayer from url hash (#baselayer=...) if any
-    const bl = location.href.match(/baselayer=([^&]+)/);
+    const bl = location.href.match(/baselayer=([^&]+)/u);
+
     if (bl)
-      localStorage.myol_baselayer = decodeURI(bl[1]);
+      localStorage.myolBaselayer = decodeURI(bl[1]);
 
     this.sliderEl = document.createElement('input');
     this.sliderEl.type = 'range';
@@ -41,7 +42,7 @@ export class LayerSwitcher extends Button {
   setMap(map) {
     map.addLayer(new BackgroundLayer());
 
-    for (let name in this.layers) {
+    for (const name in this.layers) {
       // Build html layers selectors
       this.subMenuEl.insertAdjacentHTML('beforeend', '<label><input type="checkbox" name="baselayer" value="' + name + '">' + name + '</label>');
 
@@ -55,6 +56,7 @@ export class LayerSwitcher extends Button {
 
     // Attach html additional selector (must be there to be after base layers)
     const selectExtEl = document.getElementById(this.selectExtId);
+
     if (selectExtEl) {
       selectExtEl.classList.add('select-ext');
       this.subMenuEl.appendChild(selectExtEl);
@@ -71,10 +73,10 @@ export class LayerSwitcher extends Button {
 
     // Hide the selector when the cursor is out of the selector
     map.on('pointermove', evt => {
-      const max_x = map.getTargetElement().offsetWidth - this.element.offsetWidth - 20,
-        max_y = this.element.offsetHeight + 20;
+      const maxX = map.getTargetElement().offsetWidth - this.element.offsetWidth - 20,
+        maxY = this.element.offsetHeight + 20;
 
-      if (evt.pixel[0] < max_x || evt.pixel[1] > max_y)
+      if (evt.pixel[0] < maxX || evt.pixel[1] > maxY)
         this.element.classList.remove('myol-button-switcher-open');
     });
 
@@ -84,17 +86,19 @@ export class LayerSwitcher extends Button {
   action(evt) {
     // Clean checks
     if (evt && !evt.ctrlKey) {
-      this.selectorEls.forEach(el => el.checked = false);
+      this.selectorEls.forEach(el => {
+        el.checked = false;
+      });
       evt.target.checked = true;
     }
     if (!this.element.querySelector('input[name="baselayer"]:checked'))
-      (this.element.querySelector('input[value="' + localStorage.myol_baselayer + '"]') ||
+      (this.element.querySelector('input[value="' + localStorage.myolBaselayer + '"]') ||
         this.selectorEls[0]
       ).checked = true;
 
     const selectedEls = this.element.querySelectorAll('input[name="baselayer"]:checked');
 
-    localStorage.myol_baselayer = selectedEls[0].value;
+    localStorage.myolBaselayer = selectedEls[0].value;
     this.sliderEl.value = 50;
     this.sliderEl.remove();
     this.transparentlayer = null;

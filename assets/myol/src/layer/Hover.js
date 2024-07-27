@@ -9,6 +9,7 @@ import ol from '../ol';
 export class Hover extends ol.layer.Vector {
   constructor(options) {
     super({
+      background: 'transparent',
       source: new ol.source.Vector(),
       zIndex: 500, // Above all layers
       wrapX: false,
@@ -45,12 +46,12 @@ export class Hover extends ol.layer.Vector {
       source = this.getSource();
 
     // Find the first hovered feature & layer
-    let hoveredLayer = null,
-      hoveredFeature = map.forEachFeatureAtPixel(
+    let hoveredLayer = null;
+    const hoveredFeature = map.forEachFeatureAtPixel(
         map.getEventPixel(evt.originalEvent),
         (f, l) => {
           if ((l && l.options && l.options.hoverStylesOptions) ||
-            l == this) {
+            l === this) {
             hoveredLayer = l;
             return f; // Return feature & stop the search
           }
@@ -65,7 +66,7 @@ export class Hover extends ol.layer.Vector {
         hoveredSubProperties = hoveredSubFeature.getProperties();
 
       // Click
-      if (evt.type == 'click' &&
+      if (evt.type === 'click' &&
         !(hoveredLayer.options && hoveredLayer.options.noClick)) {
         // Click cluster
         if (hoveredSubProperties.cluster) {
@@ -90,7 +91,7 @@ export class Hover extends ol.layer.Vector {
         }
       }
       // Hover
-      else if (hoveredSubFeature != map.lastHoveredSubFeature &&
+      else if (hoveredSubFeature !== map.lastHoveredSubFeature &&
         !(hoveredLayer.options && hoveredLayer.options.noHover)) {
         const f = hoveredSubFeature.clone();
 

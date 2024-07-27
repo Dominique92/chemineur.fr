@@ -97,7 +97,7 @@ export class MRI extends OpenStreetMap {
 export class Kompass extends OpenStreetMap { // Austria
   constructor(options = {}) {
     super({
-      hidden: !options.key && options.subLayer != 'osm', // For LayerSwitcher
+      hidden: !options.key && options.subLayer !== 'osm', // For LayerSwitcher
       url: options.key ?
         'https://map{1-4}.kompass.de/{z}/{x}/{y}/kompass_' + options.subLayer + '?key=' + options.key : // Specific
         'https://map{1-5}.tourinfra.com/tiles/kompass_' + options.subLayer + '/{z}/{x}/{y}.png', // No key
@@ -133,19 +133,18 @@ export class Thunderforest extends OpenStreetMap {
  */
 export class IGN extends ol.layer.Tile {
   constructor(options = {}) {
-    let IGNresolutions = [],
+    const IGNresolutions = [],
       IGNmatrixIds = [];
 
     for (let i = 0; i < 18; i++) {
-      IGNresolutions[i] = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256 / Math.pow(2, i);
+      IGNresolutions[i] = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256 / (2 ** i);
       IGNmatrixIds[i] = i.toString();
     }
 
     super({
-      hidden: !options.key, // For LayerSwitcher
       source: new ol.source.WMTS({
         // WMTS options
-        url: 'https://wxs.ign.fr/' + options.key + '/wmts',
+        url: options.key ? 'https://data.geopf.fr/private/wmts?apikey=' + options.key : 'https://wmts.geopf.fr/wmts',
         style: 'normal',
         matrixSet: 'PM',
         format: 'image/jpeg',
@@ -157,7 +156,7 @@ export class IGN extends ol.layer.Tile {
         }),
 
         // IGN options
-        ...options, // Include key & layer
+        ...options, // Include layer
       }),
       ...options, // For layer limits
     });
@@ -170,15 +169,15 @@ export class IGN extends ol.layer.Tile {
  * API : https://api3.geo.admin.ch/services/sdiservices.html#wmts
  */
 export class SwissTopo extends ol.layer.Tile {
-  constructor(options) {
-    options = {
+  constructor(opt) {
+    const options = {
       host: 'https://wmts2{0-4}.geo.admin.ch/1.0.0/',
       subLayer: 'ch.swisstopo.pixelkarte-farbe',
       maxResolution: 2000, // Resolution limit above which we switch to a more global service
       extent: [640000, 5730000, 1200000, 6100000],
       attributions: '&copy <a href="https://map.geo.admin.ch/">SwissTopo</a>',
 
-      ...options,
+      ...opt,
     };
 
     const projectionExtent = ol.proj.get('EPSG:3857').getExtent(),
@@ -186,7 +185,7 @@ export class SwissTopo extends ol.layer.Tile {
       matrixIds = [];
 
     for (let r = 0; r < 18; ++r) {
-      resolutions[r] = ol.extent.getWidth(projectionExtent) / 256 / Math.pow(2, r);
+      resolutions[r] = ol.extent.getWidth(projectionExtent) / 256 / (2 ** r);
       matrixIds[r] = r;
     }
 
@@ -213,14 +212,15 @@ export class SwissTopo extends ol.layer.Tile {
  * API : https://api-maps.ign.es/
  */
 export class IgnES extends XYZ {
-  constructor(options) {
-    options = {
+  constructor(opt) {
+    const options = {
       host: 'https://www.ign.es/wmts/',
       server: 'mapa-raster',
       subLayer: 'MTN',
       maxZoom: 20,
       attributions: '&copy; <a href="https://www.ign.es/">IGN España</a>',
-      ...options,
+
+      ...opt,
     };
 
     super({
@@ -262,13 +262,16 @@ export class IGM extends ol.layer.Tile {
   }
 
   updateResolution(view) {
-    const mapResolution = view.getResolutionForZoom(view.getZoom()),
-      layerResolution = mapResolution < 10 ? 25000 : mapResolution < 30 ? 100000 : 250000;
+    const mapResolution = view.getResolutionForZoom(view.getZoom());
+    let layerResolution = 25000; // mapResolution < 10
+
+    if (mapResolution > 10) layerResolution = 100000;
+    if (mapResolution > 30) layerResolution = 250000;
 
     this.getSource().updateParams({
       type: 'png',
       map: '/ms_ogc/WMS_v1.3/raster/IGM_' + layerResolution + '.map',
-      layers: (layerResolution == 100000 ? 'MB.IGM' : 'CB.IGM') + layerResolution,
+      layers: (layerResolution === 100000 ? 'MB.IGM' : 'CB.IGM') + layerResolution,
     });
   }
 }
@@ -278,16 +281,16 @@ export class IGM extends ol.layer.Tile {
  * API & key : https://osdatahub.os.uk/
  */
 export class OS extends XYZ {
-  constructor(options = {}) {
-    options = {
-      hidden: !options.key, // For LayerSwitcher
+  constructor(opt) {
+    const options = {
+      hidden: !opt.key, // For LayerSwitcher
       subLayer: 'Outdoor_3857',
       minZoom: 7,
       maxZoom: 16,
       extent: [-1198263, 6365000, 213000, 8702260],
       attributions: '&copy <a href="https://explore.osmaps.com/">UK Ordnancesurvey maps</a>',
 
-      ...options,
+      ...opt,
     };
 
     super({
@@ -307,13 +310,14 @@ export class OS extends XYZ {
  * No key
  */
 export class ArcGIS extends XYZ {
-  constructor(options) {
-    options = {
+  constructor(opt) {
+    const options = {
       host: 'https://server.arcgisonline.com/ArcGIS/rest/services/',
       subLayer: 'World_Imagery',
       maxZoom: 19,
       attributions: '&copy; <a href="https://www.arcgis.com/">ArcGIS (Esri)</a>',
-      ...options,
+
+      ...opt,
     };
 
     super({
@@ -342,12 +346,13 @@ export class Maxbox extends XYZ {
  * Google
  */
 export class Google extends XYZ {
-  constructor(options) {
-    options = {
+  constructor(opt) {
+    const options = {
       subLayers: 'p', // Terrain
       maxZoom: 22,
       attributions: '&copy; <a href="https://www.google.com/maps">Google</a>',
-      ...options,
+
+      ...opt,
     };
 
     super({
@@ -410,7 +415,7 @@ export class MapboxElevation extends Maxbox {
  * elevation = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1
  * Key : https://cloud.maptiler.com/account/keys/
  */
-/*// Opportunity : backup of Maxbox elevation 
+/*// Backup of Maxbox elevation 
 export class MapTilerElevation extends XYZ {
   constructor(options = {}) {
     super({
@@ -430,11 +435,13 @@ export function collection(options = {}) {
   return {
     'OSM': new OpenStreetMap(),
     'OSM outdoors': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'outdoors',
     }),
     'OpenTopo': new OpenTopo(),
     'OSM transports': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'transport',
     }),
@@ -444,17 +451,20 @@ export function collection(options = {}) {
     'Refuges.info': new MRI(),
 
     'IGN TOP25': new IGN({
-      ...options.ign, // Include key
       layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
+      key: options.ign, // Include key
+      ...options.ign, // Include key
     }),
     'IGN V2': new IGN({
       layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
-      key: 'essentiels',
+      format: 'image/png',
+    }),
+    'IGN N+1': new IGN({
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1',
       format: 'image/png',
     }),
     'IGN cartes 1950': new IGN({
       layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN50.1950',
-      key: 'cartes/geoportail',
       extent: [-580000, 506000, 1070000, 6637000],
       minZoom: 6,
     }),
@@ -464,110 +474,126 @@ export function collection(options = {}) {
       subLayer: 'osm', // No key
     }),
     'Kompas winter': new Kompass({
+      key: options.kompass, // For simplified options
       ...options.kompass, // Include key
       subLayer: 'winter',
       maxZoom: 22,
     }),
-    'England': new OS(options.os), // options include key
+    'England': new OS({
+      key: options.os, // For simplified options
+      ...options.os, // Include key
+    }),
     'Italie': new IGM(),
-
     'España': new IgnES(),
     'Google': new Google(),
 
     'Maxar': new Maxbox({
+      key: options.mapbox, // For simplified options
+      ...options.mapbox, // Include key
       tileset: 'mapbox.satellite',
-      ...options.mapbox,
     }),
     'Photo Google': new Google({
       subLayers: 's',
     }),
     'Photo ArcGIS': new ArcGIS(),
     'Photo Bing': new Bing({
+      key: options.bing, // For simplified options
       ...options.bing, // Include key
       imagerySet: 'Aerial',
     }),
+
     'Photo IGN': new IGN({
       layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
-      key: 'essentiels',
     }),
-
     'Photo IGN 1950-65': new IGN({
       layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1950-1965',
-      key: 'orthohisto/geoportail',
       style: 'BDORTHOHISTORIQUE',
       format: 'image/png',
       extent: [-580000, 506000, 1070000, 6637000],
       minZoom: 12,
     }),
-
     'IGN E.M. 1820-66': new IGN({
       layer: 'GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40',
-      key: 'cartes/geoportail',
       extent: [-580000, 506000, 1070000, 6637000],
       minZoom: 6,
     }),
     'Cadastre': new IGN({
       layer: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',
-      key: 'essentiels',
       format: 'image/png',
       extent: [-580000, 506000, 1070000, 6637000],
       minZoom: 6,
     }),
+    /* //BEST Cassini ? clé
+	'IGN Cassini': new IGN({
+      ...options.ign,
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.CASSINI',
+      key: 'an7nvfzojv5wa96dsga5nk8w', //BEST use owner key
+    }),
+	*/
   };
 }
 
-export function demo(options = {}) {
+export function examples(options = {}) {
   return {
     ...collection(options),
 
     'OSM fr': new OpenStreetMap({
       url: 'https://{a-c}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-      //BEST BUG Ensure CORS response header values are valid
     }),
     'OSM orthos FR': new OpenStreetMap({
       url: 'https://wms.openstreetmap.fr/tms/1.0.0/tous_fr/{z}/{x}/{y}',
     }),
 
     'ThF cycle': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'cycle',
       maxZoom: 14,
     }),
     'ThF trains': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'pioneer',
     }),
     'ThF villes': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'neighbourhood',
     }),
     'ThF landscape': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'landscape',
     }),
     'ThF contraste': new Thunderforest({
+      key: options.thunderforest, // For simplified options
       ...options.thunderforest, // Include key
       subLayer: 'mobile-atlas',
     }),
 
     'OS light': new OS({
+      key: options.os, // For simplified options
       ...options.os, // Include key
       subLayer: 'Light_3857',
     }),
     'OS road': new OS({
+      key: options.os, // For simplified options
       ...options.os, // Include key
       subLayer: 'Road_3857',
     }),
     'Kompas topo': new Kompass({
+      key: options.kompass, // For simplified options
       ...options.kompass, // Include key
       subLayer: 'topo',
     }),
 
     'Bing': new Bing({
+      key: options.bing, // For simplified options
       ...options.bing, // Include key
       imagerySet: 'Road',
     }),
     'Bing hybrid': new Bing({
+      key: options.bing, // For simplified options
       ...options.bing, // Include key
       imagerySet: 'AerialWithLabels',
     }),
@@ -587,13 +613,10 @@ export function demo(options = {}) {
       subLayers: 's,h',
     }),
 
-    'IGN Cassini': new IGN({
-      ...options.ign,
-      layer: 'GEOGRAPHICALGRIDSYSTEMS.CASSINI',
-      key: 'an7nvfzojv5wa96dsga5nk8w', //BEST use owner key
+    'MapBox elevation': new MapboxElevation({
+      key: options.mapbox, // For simplified options
+      ...options.mapbox, // Include key
     }),
-
-    'MapBox elevation': new MapboxElevation(options.mapbox), // options include key
 
     'Positron': new Positron(),
     'No tile': new NoTile(),

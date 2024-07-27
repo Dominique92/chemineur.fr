@@ -19,6 +19,14 @@ function chemIconUrl(type, host) {
   }
 }
 
+function addTag(doc, node, k, v) {
+  const newTag = doc.createElement('tag');
+
+  newTag.setAttribute('k', k);
+  newTag.setAttribute('v', v);
+  node.appendChild(newTag);
+}
+
 export class GeoBB extends MyVectorLayer {
   constructor(options) {
     super({
@@ -104,8 +112,8 @@ export class WRI extends MyVectorLayer {
   query(extent, resolution) {
     return {
       _path: 'api/bbox',
-      nb_points: 'all',
-      type_points: this.options.selector.getSelection(),
+      'nb_points': 'all',
+      'type_points': this.options.selector.getSelection(),
       cluster: resolution > this.options.serverClusterMinResolution ? 0.1 : null, // For server cluster layer
     };
   }
@@ -165,9 +173,7 @@ export class C2C extends MyVectorLayer {
     this.format.readFeatures = json => {
       const features = [];
 
-      for (let p in json.documents) {
-        const properties = json.documents[p];
-
+      JSON.parse(json).documents.forEach(properties =>
         features.push({
           id: properties.document_id,
           type: 'Feature',
@@ -179,8 +185,8 @@ export class C2C extends MyVectorLayer {
             ele: properties.elevation,
             link: 'https://www.camptocamp.org/waypoints/' + properties.document_id,
           },
-        });
-      }
+        })
+      );
 
       return this.format.readFeaturesFromObject({
         type: 'FeatureCollection',
@@ -226,13 +232,13 @@ export class Overpass extends MyVectorLayer {
     // List of acceptable tags in the request return
     let tags = '';
 
-    for (let e in selectEls)
+    for (const e in selectEls)
       if (selectEls[e].value)
         tags += selectEls[e].value.replace('private', '');
 
     // Extract features from data when received
-    this.format.readFeatures = function(doc, options) {
-      // Transform an area to a node (picto) at the center of this area
+    this.format.readFeatures = function(doc, opt) {
+      const newNodes = [];
 
       for (let node = doc.documentElement.firstElementChild; node; node = node.nextSibling) {
         // Translate attributes to standard myol
@@ -240,22 +246,24 @@ export class Overpass extends MyVectorLayer {
           if (tag.attributes) {
             if (tags.indexOf(tag.getAttribute('k')) !== -1 &&
               tags.indexOf(tag.getAttribute('v')) !== -1 &&
-              tag.getAttribute('k') != 'type') {
-              addTag(node, 'type', tag.getAttribute('v'));
-              addTag(node, 'icon', chemIconUrl(tag.getAttribute('v')));
+              tag.getAttribute('k') !== 'type') {
+              addTag(doc, node, 'type', tag.getAttribute('v'));
+              addTag(doc, node, 'icon', chemIconUrl(tag.getAttribute('v')));
+
               // Only once for a node
-              addTag(node, 'link', 'https://www.openstreetmap.org/node/' + node.id);
+              addTag(doc, node, 'link', 'https://www.openstreetmap.org/' + node.nodeName + '/' + node.id);
             }
 
             if (tag.getAttribute('k') && tag.getAttribute('k').includes('capacity:'))
-              addTag(node, 'capacity', tag.getAttribute('v'));
+              addTag(doc, node, 'capacity', tag.getAttribute('v'));
           }
 
-        // Create a new 'node' element centered on the surface
-        if (node.nodeName == 'way') {
+        // Transform an area to a node (picto) at the center of this area
+        if (node.nodeName === 'way') {
           const newNode = doc.createElement('node');
+
           newNode.id = node.id;
-          doc.documentElement.appendChild(newNode);
+          newNodes.push(newNode);
 
           // Browse <way> attributes to build a new node
           for (let subTagNode = node.firstElementChild; subTagNode; subTagNode = subTagNode.nextSibling)
@@ -267,49 +275,36 @@ export class Overpass extends MyVectorLayer {
                 newNode.setAttribute('nodeName', subTagNode.nodeName);
                 break;
 
-              case 'tag': {
+              case 'tag':
                 // Get existing properties
                 newNode.appendChild(subTagNode.cloneNode());
 
                 // Add a tag to mem what node type it was (for link build)
-                addTag(newNode, 'nodetype', node.nodeName);
-              }
+                addTag(doc, newNode, 'nodetype', node.nodeName);
             }
         }
 
         // Status 200 / error message
-        if (node.nodeName == 'remark' && statusEl)
+        if (node.nodeName === 'remark' && statusEl)
           statusEl.textContent = node.textContent;
       }
 
-      function addTag(node, k, v) {
-        const newTag = doc.createElement('tag');
-        newTag.setAttribute('k', k);
-        newTag.setAttribute('v', v);
-        node.appendChild(newTag);
-      }
+      // Add new nodes to the document
+      newNodes.forEach(n => doc.documentElement.appendChild(n));
 
-      return ol.format.OSMXML.prototype.readFeatures.call(this, doc, options);
+      return ol.format.OSMXML.prototype.readFeatures.call(this, doc, opt);
     };
   }
 
   query(extent, resolution, mapProjection) {
     const selections = this.selector.getSelection(),
-      items = selections[0].split(','), // The 1st (and only) selector
       ex4326 = ol.proj.transformExtent(extent, mapProjection, 'EPSG:4326').map(c => c.toPrecision(6)),
       bbox = '(' + ex4326[1] + ',' + ex4326[0] + ',' + ex4326[3] + ',' + ex4326[2] + ');',
       args = [];
 
-    // Convert selected items on overpass_api language
-    for (let l = 0; l < items.length; l++) {
-      const champs = items[l].split('+');
-
-      for (let ls = 0; ls < champs.length; ls++)
-        args.push(
-          'node' + champs[ls] + bbox + // Ask for nodes in the bbox
-          'way' + champs[ls] + bbox // Also ask for areas
-        );
-    }
+    for (let s = 0; s < selections.length; s++) // For each selected input checkbox
+      selections[s].split('+') // Multiple choices separated by "+"
+      .forEach(sel => args.push('nwr' + sel + bbox)); // Ask for node, way & relation in the bbox
 
     return {
       _path: '/api/interpreter',
