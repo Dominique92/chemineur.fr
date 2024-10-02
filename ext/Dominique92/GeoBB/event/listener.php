@@ -255,7 +255,6 @@ class listener implements EventSubscriberInterface
 		$this->add_sql_column (POSTS_TABLE, 'geo_massif', 'varchar(50)');
 		$this->add_sql_column (POSTS_TABLE, 'geo_altitude', 'text');
 
-		//TODO mettre dans la visu de post_edit
 		//HACK (horrible !) to accept geom spatial feild
 		$file_name = $this->phpbb_root_path."phpbb/db/driver/driver.php";
 		$file_tag = "\n\t\tif (is_null(\$var))";

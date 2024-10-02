@@ -1,18 +1,21 @@
 /**
- * VectorLayerCollection.js
- * Various acces to geoJson services
+ * Many simplified display of various vector layers services
  */
 
-import ol from '../ol';
+import ol from '../ol'; //BEST imports direct de node_modules/ol
+
+import {
+  transformExtent,
+} from 'ol/proj';
+
 import MyVectorLayer from './MyVectorLayer';
 
 // Get icon from chemineur.fr
-function chemIconUrl(type, host) {
+function genericIconUrl(type, hostIcons) {
   if (type) {
     const icons = type.split(' ');
 
-    return (host || 'https://chemineur.fr/') +
-      'ext/Dominique92/GeoBB/icones/' +
+    return (hostIcons || 'https://chemineur.fr/ext/Dominique92/GeoBB/icones/') +
       icons[0] +
       (icons.length > 1 ? '_' + icons[1] : '') + // Limit to 2 type names & ' ' -> '_'
       '.svg';
@@ -64,6 +67,7 @@ export class Chemineur extends GeoBB {
 }
 
 // alpages.info
+//TODO vite : Access to XMLHttpRequest at 'https://alpages.info/ext/Dominique92/GeoBB/gis.php?forums=on&bbox=5.85311%2C44.7727%2C5.91689%2C44.8093' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
 export class Alpages extends MyVectorLayer {
   constructor(options) {
     super({
@@ -86,7 +90,7 @@ export class Alpages extends MyVectorLayer {
 
   addProperties(properties) {
     return {
-      icon: chemIconUrl(properties.type), // Replace the alpages icon
+      icon: genericIconUrl(properties.type, this.options.hostIcons), // Replace the alpages icon
       link: this.host + 'viewtopic.php?t=' + properties.id,
     };
   }
@@ -149,7 +153,7 @@ export class PRC extends MyVectorLayer {
   addProperties(properties) {
     return {
       type: properties.type_hebergement,
-      icon: chemIconUrl(properties.type_hebergement),
+      icon: genericIconUrl(properties.type_hebergement, this.options.hostIcons),
       ele: properties.altitude,
       capacity: properties.cap_ete,
       link: properties.url,
@@ -181,7 +185,7 @@ export class C2C extends MyVectorLayer {
           properties: {
             name: properties.locales[0].title,
             type: properties.waypoint_type,
-            icon: chemIconUrl(properties.waypoint_type),
+            icon: genericIconUrl(properties.waypoint_type, options.hostIcons),
             ele: properties.elevation,
             link: 'https://www.camptocamp.org/waypoints/' + properties.document_id,
           },
@@ -244,18 +248,21 @@ export class Overpass extends MyVectorLayer {
         // Translate attributes to standard myol
         for (let tag = node.firstElementChild; tag; tag = tag.nextSibling)
           if (tag.attributes) {
+            const tagv = tag.getAttribute('v');
             if (tags.indexOf(tag.getAttribute('k')) !== -1 &&
-              tags.indexOf(tag.getAttribute('v')) !== -1 &&
+              tags.indexOf(tagv) !== -1 &&
               tag.getAttribute('k') !== 'type') {
-              addTag(doc, node, 'type', tag.getAttribute('v'));
-              addTag(doc, node, 'icon', chemIconUrl(tag.getAttribute('v')));
+              addTag(doc, node, 'type', tagv);
+              addTag(doc, node, 'icon',
+                genericIconUrl(tagv, options.hostIcons)
+              );
 
               // Only once for a node
               addTag(doc, node, 'link', 'https://www.openstreetmap.org/' + node.nodeName + '/' + node.id);
             }
 
             if (tag.getAttribute('k') && tag.getAttribute('k').includes('capacity:'))
-              addTag(doc, node, 'capacity', tag.getAttribute('v'));
+              addTag(doc, node, 'capacity', tagv);
           }
 
         // Transform an area to a node (picto) at the center of this area
@@ -298,7 +305,7 @@ export class Overpass extends MyVectorLayer {
 
   query(extent, resolution, mapProjection) {
     const selections = this.selector.getSelection(),
-      ex4326 = ol.proj.transformExtent(extent, mapProjection, 'EPSG:4326').map(c => c.toPrecision(6)),
+      ex4326 = transformExtent(extent, mapProjection, 'EPSG:4326').map(c => c.toPrecision(6)),
       bbox = '(' + ex4326[1] + ',' + ex4326[0] + ',' + ex4326[3] + ',' + ex4326[2] + ');',
       args = [];
 

@@ -28,9 +28,10 @@ var geobbLayer = new myol.layer.vector.GeoBB({
 		dragable: scriptName == 'posting',
 	}),
 
-	editorLayer = new myol.layer.Editor({
+	editorLayer = new myol.layer.VectorEditor({
 		geoJsonId: 'marker-json',
-		editOnly: 'line',
+		direction: true,
+		canMerge: true,
 	}),
 
 	map = new ol.Map({
@@ -42,7 +43,7 @@ var geobbLayer = new myol.layer.vector.GeoBB({
 			...myol.control.collection({
 				load: {
 					receivingLayer: editorLayer,
-				}
+				},
 			}),
 			new myol.control.LayerSwitcher({
 				layers: myol.layer.tile.collection(mapKeys),

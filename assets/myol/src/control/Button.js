@@ -1,18 +1,15 @@
 /**
- * Button.js
- * Add some usefull controls with buttons
+ * Abstract class to be used by other control buttons definitions
+ * Add some usefull controls with displayed buttons
  */
-
+//BEST redesign button hover & touch
 //BEST click sur in/out file / ...
 
-import ol from '../ol';
+import Control from 'ol/control/Control';
+
 import './button.css';
 
-/**
- * Control button
- * Abstract class to be used by other control buttons definitions
- */
-export class Button extends ol.control.Control {
+class Button extends Control {
   constructor(opt) {
     const options = {
       label: ' ', // An ascii or unicode character to decorate the button (OR : css button::after)
@@ -22,7 +19,7 @@ export class Button extends ol.control.Control {
       // subMenuId : 'id', // Html id-fr or Id containing the scrolling menu
       // subMenuHTMLfr: '', // html code of the scrolling menu in locale lang
       subMenuHTML: '', // html code of the scrolling menu
-
+      // title: '', // html title for button hovering by a mouse
       // buttonAction() {}, // (evt, active) To run when an <input> ot <a> of the subMenu is clicked / hovered, ...
       // subMenuAction() {}, // (evt) To run when the button is clicked / hovered, ...
 
@@ -45,6 +42,8 @@ export class Button extends ol.control.Control {
     this.buttonEl = document.createElement('button');
     this.buttonEl.setAttribute('type', 'button');
     this.buttonEl.innerHTML = options.label;
+    if (options.title)
+      this.buttonEl.setAttribute('title', options.title);
 
     // Add submenu below the button
     this.subMenuEl =

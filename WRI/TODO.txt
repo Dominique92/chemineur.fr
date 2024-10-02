@@ -1,13 +1,11 @@
 BUGS
 ====
-//TODO Créer un massif à partir d'un tracé existant
 //TODO Lecture nombre de commentaires d'un user avant destruction
 //TODO BUG Déconnexion = erreur 404 ?
 //TODO BUG connexion sous FF : efface le pavé connexion aprés avoir rempli avec les infos de connexion
 //TODO BUG Déconnexion KO à partir de la page de modération (problème de racine)
 //TODO BUG modifier cette fiche : ne réaffiche pas les coordonnées (FF)
 //TODO Si vous spécifiez overflow: visible sur "img", "video" et "canvas", ces tags risquent de générer du contenu visuel en dehors des limites de l'élément.
-//BEST regrouper   <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
 
 REMARQUES MENU
 ==============
