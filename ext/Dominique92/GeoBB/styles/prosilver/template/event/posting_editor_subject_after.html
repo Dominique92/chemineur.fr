@@ -34,5 +34,44 @@
 		<p class="map-altitude-massif">
 			* Laisser le champ vide pour que le serveur le détermine automatiquement.
 		</p>
+	<!-- ELSE IF MAP_TYPE == 'line' -->
+		<div id="edit-help-modify">
+			<p><b>Modifier une ligne:</b></p>
+			<p>Cliquer sur le bouton &#x2725;</p>
+			<p>La ligne sélectionnée est
+				<span style="color:red"><b>rouge</b></span></p>
+			<p>Cliquer sur une ligne modifiable (curseur &#128070; au survol)
+				pour <u>la sélectionner</u></p>
+			<br />
+			<p>Cliquer sur un sommet et glisser pour le <u>déplacer</u></p>
+			<p>Cliquer le long d'un segment puis glisser pour
+				<u>ajouter un sommet au milieu d'un segment</u>
+			</p>
+			<p>Alt+cliquer sur un sommet pour le <u>supprimer</u></p>
+			<p>Shift+cliquer sur une ligne pour en <u>inverser la direction</u></p>
+			<br />
+			<p>Ctrl+cliquer sur une ligne pour la <u>couper en deux</u></p>
+			<p>Déplacer l'extrémité d'une ligne jusqu'à l'extrémité
+				d'une autre pour les <u>fusionner</u></p>
+			<br />
+			<p>Ctrl+Alt+cliquer sur un de ses segment pour
+			<u>supprimer une ligne</u>
+			</p>
+		</div>
+
+		<div id="edit-help-drawLine">
+			<p><b>Créer une ligne:</b></p>
+			<p>Cliquer sur le bouton
+				<span style="display:inline-block;transform:scaleX(-1)">&#x2710;</span>
+			</p>
+			<p>Cliquer sur l'emplacement du <u>début</u></p>
+			<p>Puis sur chaque <u>sommet à créer</u></p>
+			<p>Double cliquer sur le <u>dernier sommet</u> pour terminer</p>
+			<br />
+			<p><b>Suivre un tracé existant:</b></p>
+			<p>Pendant la création, placer un sommet sur une
+				<u>ligne en fond</u> et en <u>suivre le contour</u></p>
+			<p>Placer un sommet en dehors de la ligne suivie pour en sortir</p>
+		</div>
 	<!-- ENDIF -->
 <!-- ENDIF -->
