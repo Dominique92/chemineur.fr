@@ -14,4 +14,7 @@ if (typeof map !== 'undefined')
 		new myol.layer.vector.Alpages({
 			selectName: 'select-alpages',
 		}),
+		new myol.layer.vector.PL({
+			selectName: 'select-pl',
+		}),
 	].forEach(l => map.addLayer(l));
