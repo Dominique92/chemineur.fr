@@ -5,8 +5,8 @@
  * Corrected https://github.com/Dominique92/ol-geocoder
  */
 
-import 'ol-geocoder/dist/ol-geocoder.css';
-import Geocoder from 'ol-geocoder';
+import '@myol/geocoder/src/base.css';
+import Geocoder from '@myol/geocoder/src/base';
 
 import './myGeocoder.css';
 

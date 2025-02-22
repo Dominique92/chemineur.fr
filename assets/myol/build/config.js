@@ -15,7 +15,7 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8')),
     preventAssignment: true,
     __myolBuildVersion__: pkg.version,
     __myolBuildDate__: timeBuild,
-    __geocoderBuildVersion__: packageLock.packages["node_modules/ol-geocoder"].version,
+    __geocoderBuildVersion__: packageLock.packages["node_modules/@myol/geocoder"].version,
     __proj4BuildVersion__: packageLock.packages["node_modules/proj4"].version,
   },
   banner = readFileSync('./build/banner.js', 'utf-8')

@@ -11,7 +11,7 @@ Chaque <element> désigne :
 - a123.4.5 (caractère Ascii décimal &#123; à la position x = 4, y = 5)
 - t123 (taille de l'icône 123*123) défaut 24
 */
-//TODO BUG ne marche pas si le nom de l'icône comporte %20
+//BEST BUG ne marche pas si le nom de l'icône comporte %20
 
 // Traduit le nom si nécéssaire
 include ('alias.php');
