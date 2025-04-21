@@ -137,7 +137,8 @@ while ($row = $db->sql_fetchrow($result)) {
 			unset ($m[0]);
 			unset ($m[3]);
 
-			return implode ($m, ',');
+			return $m[1].','.$m[2];
+			//TODO return implode ($m, ',');
 		},
 		$row['geojson']
 	);

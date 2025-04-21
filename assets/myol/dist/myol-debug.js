@@ -4,7 +4,7 @@
  * This package adds many features to Openlayer https://openlayers.org/
  * https://github.com/Dominique92/myol#readme
  * Based on https://openlayers.org
- * Built 21/02/2025 17:22:13 using npm run build from the src/... sources
+ * Built 19/04/2025 17:18:58 using npm run build from the src/... sources
  * Please don't modify this file : best is to modify src/... & npm run build !
  */
 (function (global, factory) {
@@ -1004,7 +1004,7 @@
    * OpenLayers version.
    * @type {string}
    */
-  const VERSION$1 = '10.4.0';
+  const VERSION$1 = '10.5.0';
 
   /**
    * @module ol/Object
@@ -4871,7 +4871,7 @@
    * @return {boolean} Equivalent.
    * @api
    */
-  function equivalent(projection1, projection2) {
+  function equivalent$1(projection1, projection2) {
     if (projection1 === projection2) {
       return true;
     }
@@ -5275,7 +5275,7 @@
     createSafeCoordinateTransform: createSafeCoordinateTransform,
     createTransformFromCoordinateTransform: createTransformFromCoordinateTransform,
     disableCoordinateWarning: disableCoordinateWarning,
-    equivalent: equivalent,
+    equivalent: equivalent$1,
     fromLonLat: fromLonLat,
     fromUserCoordinate: fromUserCoordinate,
     fromUserExtent: fromUserExtent,
@@ -5432,25 +5432,44 @@
   /**
    * @type {Array}
    */
-  const matrixPrecision = [1e6, 1e6, 1e6, 1e6, 2, 2];
+  const matrixPrecision = [1e5, 1e5, 1e5, 1e5, 2, 2];
 
   /**
-   * A rounded string version of the transform.  This can be used
+   * A matrix string version of the transform.  This can be used
    * for CSS transforms.
    * @param {!Transform} mat Matrix.
    * @return {string} The transform as a string.
    */
   function toString$1(mat) {
-    const transformString =
-      'matrix(' +
-      mat
-        .map(
-          (value, i) =>
-            Math.round(value * matrixPrecision[i]) / matrixPrecision[i],
-        )
-        .join(', ') +
-      ')';
+    const transformString = 'matrix(' + mat.join(', ') + ')';
     return transformString;
+  }
+
+  /**
+   * Create a transform from a CSS transform matrix string.
+   * @param {string} cssTransform The CSS string to parse.
+   * @return {!Transform} The transform.
+   */
+  function fromString$1(cssTransform) {
+    const values = cssTransform.substring(7, cssTransform.length - 1).split(',');
+    return values.map(parseFloat);
+  }
+
+  /**
+   * Compare two matrices for equality.
+   * @param {!string} cssTransform1 A CSS transform matrix string.
+   * @param {!string} cssTransform2 A CSS transform matrix string.
+   * @return {boolean} The two matrices are equal.
+   */
+  function equivalent(cssTransform1, cssTransform2) {
+    const mat1 = fromString$1(cssTransform1);
+    const mat2 = fromString$1(cssTransform2);
+    for (let i = 0; i < 6; ++i) {
+      if (Math.round((mat1[i] - mat2[i]) * matrixPrecision[i]) !== 0) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -7825,6 +7844,30 @@
   }
 
   /**
+   * Calculate the intersection point of two line segments.
+   * Reference: https://stackoverflow.com/a/72474223/2389327
+   * @param {Array<import("../../coordinate.js").Coordinate>} segment1 The first line segment as an array of two points.
+   * @param {Array<import("../../coordinate.js").Coordinate>} segment2 The second line segment as an array of two points.
+   * @return {import("../../coordinate.js").Coordinate|undefined} The intersection point or `undefined` if no intersection.
+   */
+  function getIntersectionPoint(segment1, segment2) {
+    const [a, b] = segment1;
+    const [c, d] = segment2;
+    const t =
+      ((a[0] - c[0]) * (c[1] - d[1]) - (a[1] - c[1]) * (c[0] - d[0])) /
+      ((a[0] - b[0]) * (c[1] - d[1]) - (a[1] - b[1]) * (c[0] - d[0]));
+    const u =
+      ((a[0] - c[0]) * (a[1] - b[1]) - (a[1] - c[1]) * (a[0] - b[0])) /
+      ((a[0] - b[0]) * (c[1] - d[1]) - (a[1] - b[1]) * (c[0] - d[0]));
+
+    // Check if lines actually intersect
+    if (0 <= t && t <= 1 && 0 <= u && u <= 1) {
+      return [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+    }
+    return undefined;
+  }
+
+  /**
    * @module ol/geom/flat/intersectsextent
    */
 
@@ -9579,7 +9622,7 @@
    * @classdesc
    * Events emitted as map browser events are instances of this type.
    * See {@link module:ol/Map~Map} for which events trigger a map browser event.
-   * @template {UIEvent} EVENT
+   * @template {PointerEvent|KeyboardEvent|WheelEvent} [EVENT=PointerEvent|KeyboardEvent|WheelEvent]
    */
   class MapBrowserEvent extends MapEvent {
     /**
@@ -9755,12 +9798,6 @@
     typeof navigator !== 'undefined' && typeof navigator.userAgent !== 'undefined'
       ? navigator.userAgent.toLowerCase()
       : '';
-
-  /**
-   * User agent string says we are dealing with Firefox as browser.
-   * @type {boolean}
-   */
-  const FIREFOX = ua.includes('firefox');
 
   /**
    * User agent string says we are dealing with Safari as browser.
@@ -13434,7 +13471,7 @@
       '(?:(?:normal|\\1|\\2|\\3)\\s*){0,3}((?:xx?-)?',
       '(?:small|large)|medium|smaller|larger|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx]))',
       '(?:\\s*\\/\\s*(normal|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx])?))',
-      '?\\s*([-,\\"\\\'\\sa-z]+?)\\s*$',
+      '?\\s*([-,\\"\\\'\\sa-z0-9]+?)\\s*$',
     ].join(''),
     'i',
   );
@@ -14923,9 +14960,7 @@
    * @api
    */
   const altKeyOnly = function (mapBrowserEvent) {
-    const originalEvent = /** @type {KeyboardEvent|MouseEvent|TouchEvent} */ (
-      mapBrowserEvent.originalEvent
-    );
+    const originalEvent = mapBrowserEvent.originalEvent;
     return (
       originalEvent.altKey &&
       !(originalEvent.metaKey || originalEvent.ctrlKey) &&
@@ -14942,9 +14977,7 @@
    * @api
    */
   const altShiftKeysOnly = function (mapBrowserEvent) {
-    const originalEvent = /** @type {KeyboardEvent|MouseEvent|TouchEvent} */ (
-      mapBrowserEvent.originalEvent
-    );
+    const originalEvent = mapBrowserEvent.originalEvent;
     return (
       originalEvent.altKey &&
       !(originalEvent.metaKey || originalEvent.ctrlKey) &&
@@ -15015,10 +15048,12 @@
    * @return {boolean} The result.
    */
   const mouseActionButton = function (mapBrowserEvent) {
-    const originalEvent = /** @type {MouseEvent} */ (
-      mapBrowserEvent.originalEvent
+    const originalEvent = mapBrowserEvent.originalEvent;
+    return (
+      originalEvent instanceof PointerEvent &&
+      originalEvent.button == 0 &&
+      !(WEBKIT && MAC && originalEvent.ctrlKey)
     );
-    return originalEvent.button == 0 && !(WEBKIT && MAC && originalEvent.ctrlKey);
   };
 
   /**
@@ -15093,9 +15128,7 @@
    * @api
    */
   const platformModifierKeyOnly = function (mapBrowserEvent) {
-    const originalEvent = /** @type {KeyboardEvent|MouseEvent|TouchEvent} */ (
-      mapBrowserEvent.originalEvent
-    );
+    const originalEvent = mapBrowserEvent.originalEvent;
     return (
       !originalEvent.altKey &&
       (MAC ? originalEvent.metaKey : originalEvent.ctrlKey) &&
@@ -15112,9 +15145,7 @@
    * @api
    */
   const platformModifierKey = function (mapBrowserEvent) {
-    const originalEvent = /** @type {KeyboardEvent|MouseEvent|TouchEvent} */ (
-      mapBrowserEvent.originalEvent
-    );
+    const originalEvent = mapBrowserEvent.originalEvent;
     return MAC ? originalEvent.metaKey : originalEvent.ctrlKey;
   };
 
@@ -15127,9 +15158,7 @@
    * @api
    */
   const shiftKeyOnly = function (mapBrowserEvent) {
-    const originalEvent = /** @type {KeyboardEvent|MouseEvent|TouchEvent} */ (
-      mapBrowserEvent.originalEvent
-    );
+    const originalEvent = mapBrowserEvent.originalEvent;
     return (
       !originalEvent.altKey &&
       !(originalEvent.metaKey || originalEvent.ctrlKey) &&
@@ -15147,9 +15176,7 @@
    * @api
    */
   const targetNotEditable = function (mapBrowserEvent) {
-    const originalEvent = /** @type {KeyboardEvent|MouseEvent|TouchEvent} */ (
-      mapBrowserEvent.originalEvent
-    );
+    const originalEvent = mapBrowserEvent.originalEvent;
     const tagName = /** @type {Element} */ (originalEvent.target).tagName;
     return (
       tagName !== 'INPUT' &&
@@ -15170,15 +15197,11 @@
    * @api
    */
   const mouseOnly = function (mapBrowserEvent) {
-    const pointerEvent = /** @type {import("../MapBrowserEvent").default} */ (
-      mapBrowserEvent
-    ).originalEvent;
-    assert$1(
-      pointerEvent !== undefined,
-      'mapBrowserEvent must originate from a pointer event',
-    );
+    const pointerEvent = mapBrowserEvent.originalEvent;
     // see https://www.w3.org/TR/pointerevents/#widl-PointerEvent-pointerType
-    return pointerEvent.pointerType == 'mouse';
+    return (
+      pointerEvent instanceof PointerEvent && pointerEvent.pointerType == 'mouse'
+    );
   };
 
   /**
@@ -15189,15 +15212,11 @@
    * @api
    */
   const touchOnly = function (mapBrowserEvent) {
-    const pointerEvt = /** @type {import("../MapBrowserEvent").default} */ (
-      mapBrowserEvent
-    ).originalEvent;
-    assert$1(
-      pointerEvt !== undefined,
-      'mapBrowserEvent must originate from a pointer event',
-    );
+    const pointerEvt = mapBrowserEvent.originalEvent;
     // see https://www.w3.org/TR/pointerevents/#widl-PointerEvent-pointerType
-    return pointerEvt.pointerType === 'touch';
+    return (
+      pointerEvt instanceof PointerEvent && pointerEvt.pointerType === 'touch'
+    );
   };
 
   /**
@@ -15208,15 +15227,9 @@
    * @api
    */
   const penOnly = function (mapBrowserEvent) {
-    const pointerEvt = /** @type {import("../MapBrowserEvent").default} */ (
-      mapBrowserEvent
-    ).originalEvent;
-    assert$1(
-      pointerEvt !== undefined,
-      'mapBrowserEvent must originate from a pointer event',
-    );
+    const pointerEvt = mapBrowserEvent.originalEvent;
     // see https://www.w3.org/TR/pointerevents/#widl-PointerEvent-pointerType
-    return pointerEvt.pointerType === 'pen';
+    return pointerEvt instanceof PointerEvent && pointerEvt.pointerType === 'pen';
   };
 
   /**
@@ -15229,14 +15242,12 @@
    * @api
    */
   const primaryAction = function (mapBrowserEvent) {
-    const pointerEvent = /** @type {import("../MapBrowserEvent").default} */ (
-      mapBrowserEvent
-    ).originalEvent;
-    assert$1(
-      pointerEvent !== undefined,
-      'mapBrowserEvent must originate from a pointer event',
+    const pointerEvent = mapBrowserEvent.originalEvent;
+    return (
+      pointerEvent instanceof PointerEvent &&
+      pointerEvent.isPrimary &&
+      pointerEvent.button === 0
     );
-    return pointerEvent.isPrimary && pointerEvent.button === 0;
   };
 
   var condition = /*#__PURE__*/Object.freeze({
@@ -16723,9 +16734,6 @@
       let delta;
       if (mapBrowserEvent.type == EventType.WHEEL) {
         delta = wheelEvent.deltaY;
-        if (FIREFOX && wheelEvent.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
-          delta /= DEVICE_PIXEL_RATIO;
-        }
         if (wheelEvent.deltaMode === WheelEvent.DOM_DELTA_LINE) {
           delta *= 40;
         }
@@ -19221,714 +19229,6 @@
       }
   }
 
-  var names$y = {
-  	aliceblue: [240, 248, 255],
-  	antiquewhite: [250, 235, 215],
-  	aqua: [0, 255, 255],
-  	aquamarine: [127, 255, 212],
-  	azure: [240, 255, 255],
-  	beige: [245, 245, 220],
-  	bisque: [255, 228, 196],
-  	black: [0, 0, 0],
-  	blanchedalmond: [255, 235, 205],
-  	blue: [0, 0, 255],
-  	blueviolet: [138, 43, 226],
-  	brown: [165, 42, 42],
-  	burlywood: [222, 184, 135],
-  	cadetblue: [95, 158, 160],
-  	chartreuse: [127, 255, 0],
-  	chocolate: [210, 105, 30],
-  	coral: [255, 127, 80],
-  	cornflowerblue: [100, 149, 237],
-  	cornsilk: [255, 248, 220],
-  	crimson: [220, 20, 60],
-  	cyan: [0, 255, 255],
-  	darkblue: [0, 0, 139],
-  	darkcyan: [0, 139, 139],
-  	darkgoldenrod: [184, 134, 11],
-  	darkgray: [169, 169, 169],
-  	darkgreen: [0, 100, 0],
-  	darkgrey: [169, 169, 169],
-  	darkkhaki: [189, 183, 107],
-  	darkmagenta: [139, 0, 139],
-  	darkolivegreen: [85, 107, 47],
-  	darkorange: [255, 140, 0],
-  	darkorchid: [153, 50, 204],
-  	darkred: [139, 0, 0],
-  	darksalmon: [233, 150, 122],
-  	darkseagreen: [143, 188, 143],
-  	darkslateblue: [72, 61, 139],
-  	darkslategray: [47, 79, 79],
-  	darkslategrey: [47, 79, 79],
-  	darkturquoise: [0, 206, 209],
-  	darkviolet: [148, 0, 211],
-  	deeppink: [255, 20, 147],
-  	deepskyblue: [0, 191, 255],
-  	dimgray: [105, 105, 105],
-  	dimgrey: [105, 105, 105],
-  	dodgerblue: [30, 144, 255],
-  	firebrick: [178, 34, 34],
-  	floralwhite: [255, 250, 240],
-  	forestgreen: [34, 139, 34],
-  	fuchsia: [255, 0, 255],
-  	gainsboro: [220, 220, 220],
-  	ghostwhite: [248, 248, 255],
-  	gold: [255, 215, 0],
-  	goldenrod: [218, 165, 32],
-  	gray: [128, 128, 128],
-  	green: [0, 128, 0],
-  	greenyellow: [173, 255, 47],
-  	grey: [128, 128, 128],
-  	honeydew: [240, 255, 240],
-  	hotpink: [255, 105, 180],
-  	indianred: [205, 92, 92],
-  	indigo: [75, 0, 130],
-  	ivory: [255, 255, 240],
-  	khaki: [240, 230, 140],
-  	lavender: [230, 230, 250],
-  	lavenderblush: [255, 240, 245],
-  	lawngreen: [124, 252, 0],
-  	lemonchiffon: [255, 250, 205],
-  	lightblue: [173, 216, 230],
-  	lightcoral: [240, 128, 128],
-  	lightcyan: [224, 255, 255],
-  	lightgoldenrodyellow: [250, 250, 210],
-  	lightgray: [211, 211, 211],
-  	lightgreen: [144, 238, 144],
-  	lightgrey: [211, 211, 211],
-  	lightpink: [255, 182, 193],
-  	lightsalmon: [255, 160, 122],
-  	lightseagreen: [32, 178, 170],
-  	lightskyblue: [135, 206, 250],
-  	lightslategray: [119, 136, 153],
-  	lightslategrey: [119, 136, 153],
-  	lightsteelblue: [176, 196, 222],
-  	lightyellow: [255, 255, 224],
-  	lime: [0, 255, 0],
-  	limegreen: [50, 205, 50],
-  	linen: [250, 240, 230],
-  	magenta: [255, 0, 255],
-  	maroon: [128, 0, 0],
-  	mediumaquamarine: [102, 205, 170],
-  	mediumblue: [0, 0, 205],
-  	mediumorchid: [186, 85, 211],
-  	mediumpurple: [147, 112, 219],
-  	mediumseagreen: [60, 179, 113],
-  	mediumslateblue: [123, 104, 238],
-  	mediumspringgreen: [0, 250, 154],
-  	mediumturquoise: [72, 209, 204],
-  	mediumvioletred: [199, 21, 133],
-  	midnightblue: [25, 25, 112],
-  	mintcream: [245, 255, 250],
-  	mistyrose: [255, 228, 225],
-  	moccasin: [255, 228, 181],
-  	navajowhite: [255, 222, 173],
-  	navy: [0, 0, 128],
-  	oldlace: [253, 245, 230],
-  	olive: [128, 128, 0],
-  	olivedrab: [107, 142, 35],
-  	orange: [255, 165, 0],
-  	orangered: [255, 69, 0],
-  	orchid: [218, 112, 214],
-  	palegoldenrod: [238, 232, 170],
-  	palegreen: [152, 251, 152],
-  	paleturquoise: [175, 238, 238],
-  	palevioletred: [219, 112, 147],
-  	papayawhip: [255, 239, 213],
-  	peachpuff: [255, 218, 185],
-  	peru: [205, 133, 63],
-  	pink: [255, 192, 203],
-  	plum: [221, 160, 221],
-  	powderblue: [176, 224, 230],
-  	purple: [128, 0, 128],
-  	rebeccapurple: [102, 51, 153],
-  	red: [255, 0, 0],
-  	rosybrown: [188, 143, 143],
-  	royalblue: [65, 105, 225],
-  	saddlebrown: [139, 69, 19],
-  	salmon: [250, 128, 114],
-  	sandybrown: [244, 164, 96],
-  	seagreen: [46, 139, 87],
-  	seashell: [255, 245, 238],
-  	sienna: [160, 82, 45],
-  	silver: [192, 192, 192],
-  	skyblue: [135, 206, 235],
-  	slateblue: [106, 90, 205],
-  	slategray: [112, 128, 144],
-  	slategrey: [112, 128, 144],
-  	snow: [255, 250, 250],
-  	springgreen: [0, 255, 127],
-  	steelblue: [70, 130, 180],
-  	tan: [210, 180, 140],
-  	teal: [0, 128, 128],
-  	thistle: [216, 191, 216],
-  	tomato: [255, 99, 71],
-  	turquoise: [64, 224, 208],
-  	violet: [238, 130, 238],
-  	wheat: [245, 222, 179],
-  	white: [255, 255, 255],
-  	whitesmoke: [245, 245, 245],
-  	yellow: [255, 255, 0],
-  	yellowgreen: [154, 205, 50]
-  };
-
-  /**
-   * @module color-parse
-   */
-
-  /**
-   * Base hues
-   * http://dev.w3.org/csswg/css-color/#typedef-named-hue
-   */
-  //FIXME: use external hue detector
-  var baseHues = {
-  	red: 0,
-  	orange: 60,
-  	yellow: 120,
-  	green: 180,
-  	blue: 240,
-  	purple: 300
-  };
-
-  /**
-   * Parse color from the string passed
-   *
-   * @return {Object} A space indicator `space`, an array `values` and `alpha`
-   */
-  function parse$3(cstr) {
-  	var m, parts = [], alpha = 1, space;
-
-  	//numeric case
-  	if (typeof cstr === 'number') {
-  		return { space: 'rgb', values: [cstr >>> 16, (cstr & 0x00ff00) >>> 8, cstr & 0x0000ff], alpha: 1 }
-  	}
-  	if (typeof cstr === 'number') return { space: 'rgb', values: [cstr >>> 16, (cstr & 0x00ff00) >>> 8, cstr & 0x0000ff], alpha: 1 }
-
-  	cstr = String(cstr).toLowerCase();
-
-  	//keyword
-  	if (names$y[cstr]) {
-  		parts = names$y[cstr].slice();
-  		space = 'rgb';
-  	}
-
-  	//reserved words
-  	else if (cstr === 'transparent') {
-  		alpha = 0;
-  		space = 'rgb';
-  		parts = [0, 0, 0];
-  	}
-
-  	//hex
-  	else if (cstr[0] === '#') {
-  		var base = cstr.slice(1);
-  		var size = base.length;
-  		var isShort = size <= 4;
-  		alpha = 1;
-
-  		if (isShort) {
-  			parts = [
-  				parseInt(base[0] + base[0], 16),
-  				parseInt(base[1] + base[1], 16),
-  				parseInt(base[2] + base[2], 16)
-  			];
-  			if (size === 4) {
-  				alpha = parseInt(base[3] + base[3], 16) / 255;
-  			}
-  		}
-  		else {
-  			parts = [
-  				parseInt(base[0] + base[1], 16),
-  				parseInt(base[2] + base[3], 16),
-  				parseInt(base[4] + base[5], 16)
-  			];
-  			if (size === 8) {
-  				alpha = parseInt(base[6] + base[7], 16) / 255;
-  			}
-  		}
-
-  		if (!parts[0]) parts[0] = 0;
-  		if (!parts[1]) parts[1] = 0;
-  		if (!parts[2]) parts[2] = 0;
-
-  		space = 'rgb';
-  	}
-
-  	// color space
-  	else if (m = /^((?:rgba?|hs[lvb]a?|hwba?|cmyk?|xy[zy]|gray|lab|lchu?v?|[ly]uv|lms|oklch|oklab|color))\s*\(([^\)]*)\)/.exec(cstr)) {
-  		var name = m[1];
-  		space = name.replace(/a$/, '');
-  		var dims = space === 'cmyk' ? 4 : space === 'gray' ? 1 : 3;
-  		parts = m[2].trim().split(/\s*[,\/]\s*|\s+/);
-
-  		// color(srgb-linear x x x) -> srgb-linear(x x x)
-  		if (space === 'color') space = parts.shift();
-
-  		parts = parts.map(function (x, i) {
-  			//<percentage>
-  			if (x[x.length - 1] === '%') {
-  				x = parseFloat(x) / 100;
-  				// alpha -> 0..1
-  				if (i === 3) return x
-  				// rgb -> 0..255
-  				if (space === 'rgb') return x * 255
-  				// hsl, hwb H -> 0..100
-  				if (space[0] === 'h') return x * 100
-  				// lch, lab L -> 0..100
-  				if (space[0] === 'l' && !i) return x * 100
-  				// lab A B -> -125..125
-  				if (space === 'lab') return x * 125
-  				// lch C -> 0..150, H -> 0..360
-  				if (space === 'lch') return i < 2 ? x * 150 : x * 360
-  				// oklch/oklab L -> 0..1
-  				if (space[0] === 'o' && !i) return x
-  				// oklab A B -> -0.4..0.4
-  				if (space === 'oklab') return x * 0.4
-  				// oklch C -> 0..0.4, H -> 0..360
-  				if (space === 'oklch') return i < 2 ? x * 0.4 : x * 360
-  				// color(xxx) -> 0..1
-  				return x
-  			}
-
-  			//hue
-  			if (space[i] === 'h' || (i === 2 && space[space.length - 1] === 'h')) {
-  				//<base-hue>
-  				if (baseHues[x] !== undefined) return baseHues[x]
-  				//<deg>
-  				if (x.endsWith('deg')) return parseFloat(x)
-  				//<turn>
-  				if (x.endsWith('turn')) return parseFloat(x) * 360
-  				if (x.endsWith('grad')) return parseFloat(x) * 360 / 400
-  				if (x.endsWith('rad')) return parseFloat(x) * 180 / Math.PI
-  			}
-  			if (x === 'none') return 0
-  			return parseFloat(x)
-  		});
-
-  		alpha = parts.length > dims ? parts.pop() : 1;
-  	}
-
-  	//named channels case
-  	else if (/[0-9](?:\s|\/|,)/.test(cstr)) {
-  		parts = cstr.match(/([0-9]+)/g).map(function (value) {
-  			return parseFloat(value)
-  		});
-
-  		space = cstr.match(/([a-z])/ig)?.join('')?.toLowerCase() || 'rgb';
-  	}
-
-  	return {
-  		space,
-  		values: parts,
-  		alpha
-  	}
-  }
-
-  /**
-   * RGB space.
-   *
-   * @module  color-space/rgb
-   */
-  const rgb = {
-  	name: 'rgb',
-  	min: [0, 0, 0],
-  	max: [255, 255, 255],
-  	channel: ['red', 'green', 'blue'],
-  	alias: ['RGB']
-  };
-
-  /**
-   * @module color-space/hsl
-   */
-
-  var hsl = {
-  	name: 'hsl',
-  	min: [0, 0, 0],
-  	max: [360, 100, 100],
-  	channel: ['hue', 'saturation', 'lightness'],
-  	alias: ['HSL'],
-
-  	rgb: function (hsl) {
-  		var h = hsl[0] / 360, s = hsl[1] / 100, l = hsl[2] / 100, t1, t2, t3, rgb, val, i = 0;
-
-  		if (s === 0) return val = l * 255, [val, val, val];
-
-  		t2 = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  		t1 = 2 * l - t2;
-
-  		rgb = [0, 0, 0];
-  		for (; i < 3;) {
-  			t3 = h + 1 / 3 * - (i - 1);
-  			t3 < 0 ? t3++ : t3 > 1 && t3--;
-  			val = 6 * t3 < 1 ? t1 + (t2 - t1) * 6 * t3 :
-  				2 * t3 < 1 ? t2 :
-  					3 * t3 < 2 ? t1 + (t2 - t1) * (2 / 3 - t3) * 6 :
-  						t1;
-  			rgb[i++] = val * 255;
-  		}
-
-  		return rgb;
-  	}
-  };
-
-
-  //extend rgb
-  rgb.hsl = function (rgb) {
-  	var r = rgb[0] / 255,
-  		g = rgb[1] / 255,
-  		b = rgb[2] / 255,
-  		min = Math.min(r, g, b),
-  		max = Math.max(r, g, b),
-  		delta = max - min,
-  		h, s, l;
-
-  	if (max === min) {
-  		h = 0;
-  	}
-  	else if (r === max) {
-  		h = (g - b) / delta;
-  	}
-  	else if (g === max) {
-  		h = 2 + (b - r) / delta;
-  	}
-  	else if (b === max) {
-  		h = 4 + (r - g) / delta;
-  	}
-
-  	//FIXME h is possibly undefined
-  	//@ts-ignore
-  	h = Math.min(h * 60, 360);
-
-  	if (h < 0) {
-  		h += 360;
-  	}
-
-  	l = (min + max) / 2;
-
-  	if (max === min) {
-  		s = 0;
-  	}
-  	else if (l <= 0.5) {
-  		s = delta / (max + min);
-  	}
-  	else {
-  		s = delta / (2 - max - min);
-  	}
-
-  	return [h, s * 100, l * 100];
-  };
-
-  /** @module  color-rgba */
-
-  function rgba(color) {
-  	// template literals
-  	if (Array.isArray(color) && color.raw) color = String.raw(...arguments);
-  	if (color instanceof Number) color = +color;
-
-  	var values;
-
-  	//attempt to parse non-array arguments
-  	var parsed = parse$3(color);
-
-  	if (!parsed.space) return []
-
-  	const min = parsed.space[0] === 'h' ? hsl.min : rgb.min;
-  	const max = parsed.space[0] === 'h' ? hsl.max : rgb.max;
-
-  	values = Array(3);
-  	values[0] = Math.min(Math.max(parsed.values[0], min[0]), max[0]);
-  	values[1] = Math.min(Math.max(parsed.values[1], min[1]), max[1]);
-  	values[2] = Math.min(Math.max(parsed.values[2], min[2]), max[2]);
-
-  	if (parsed.space[0] === 'h') {
-  		values = hsl.rgb(values);
-  	}
-
-  	values.push(Math.min(Math.max(parsed.alpha, 0), 1));
-
-  	return values
-  }
-
-  /**
-   * CIE XYZ
-   *
-   * @module  color-space/xyz
-   */
-
-  const xyz = {
-  	name: 'xyz',
-  	min: [0, 0, 0],
-  	channel: ['X', 'Y', 'Z'],
-  	alias: ['XYZ', 'ciexyz', 'cie1931'],
-
-  	// Whitepoint reference values with observer/illuminant
-  	// http://en.wikipedia.org/wiki/Standard_illuminant
-  	whitepoint: {
-  		//1931 2°
-  		2: {
-  			//incadescent
-  			A: [109.85, 100, 35.585],
-  			// B:[],
-  			C: [98.074, 100, 118.232],
-  			D50: [96.422, 100, 82.521],
-  			D55: [95.682, 100, 92.149],
-  			//daylight
-  			D65: [95.045592705167, 100, 108.9057750759878],
-  			D75: [94.972, 100, 122.638],
-  			//flourescent
-  			// F1: [],
-  			F2: [99.187, 100, 67.395],
-  			// F3: [],
-  			// F4: [],
-  			// F5: [],
-  			// F6:[],
-  			F7: [95.044, 100, 108.755],
-  			// F8: [],
-  			// F9: [],
-  			// F10: [],
-  			F11: [100.966, 100, 64.370],
-  			// F12: [],
-  			E: [100, 100, 100]
-  		},
-
-  		//1964  10°
-  		10: {
-  			//incadescent
-  			A: [111.144, 100, 35.200],
-  			C: [97.285, 100, 116.145],
-  			D50: [96.720, 100, 81.427],
-  			D55: [95.799, 100, 90.926],
-  			//daylight
-  			D65: [94.811, 100, 107.304],
-  			D75: [94.416, 100, 120.641],
-  			//flourescent
-  			F2: [103.280, 100, 69.026],
-  			F7: [95.792, 100, 107.687],
-  			F11: [103.866, 100, 65.627],
-  			E: [100, 100, 100]
-  		}
-  	}
-  };
-
-
-  /**
-   * Top values are the whitepoint’s top values, default are D65
-   */
-  xyz.max = xyz.whitepoint[2].D65;
-
-
-  /**
-   * Transform xyz to rgb
-   *
-   * @param {Array<number>} _xyz Array of xyz values
-   * @param {Array<number>} white Whitepoint reference
-   * @return {Array<number>} RGB values
-   */
-  xyz.rgb = function (_xyz, white) {
-  	// FIXME: make sure we have to divide like this. Probably we have to replace matrix as well then
-  	white = white || xyz.whitepoint[2].E;
-
-  	var x = _xyz[0] / white[0],
-  		y = _xyz[1] / white[1],
-  		z = _xyz[2] / white[2],
-  		r, g, b;
-
-  	// assume sRGB
-  	// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
-  	r = (x * 3.240969941904521) + (y * -1.537383177570093) + (z * -0.498610760293);
-  	g = (x * -0.96924363628087) + (y * 1.87596750150772) + (z * 0.041555057407175);
-  	b = (x * 0.055630079696993) + (y * -0.20397695888897) + (z * 1.056971514242878);
-
-  	r = r > 0.0031308 ? ((1.055 * Math.pow(r, 1.0 / 2.4)) - 0.055)
-  		: r = (r * 12.92);
-
-  	g = g > 0.0031308 ? ((1.055 * Math.pow(g, 1.0 / 2.4)) - 0.055)
-  		: g = (g * 12.92);
-
-  	b = b > 0.0031308 ? ((1.055 * Math.pow(b, 1.0 / 2.4)) - 0.055)
-  		: b = (b * 12.92);
-
-  	r = Math.min(Math.max(0, r), 1);
-  	g = Math.min(Math.max(0, g), 1);
-  	b = Math.min(Math.max(0, b), 1);
-
-  	return [r * 255, g * 255, b * 255];
-  };
-
-
-
-  /**
-   * RGB to XYZ
-   *
-   * @param {Array<number>} rgb RGB channels
-   *
-   * @return {Array<number>} XYZ channels
-   */
-  rgb.xyz = function (rgb, white) {
-  	var r = rgb[0] / 255,
-  		g = rgb[1] / 255,
-  		b = rgb[2] / 255;
-
-  	// assume sRGB
-  	r = r > 0.04045 ? Math.pow(((r + 0.055) / 1.055), 2.4) : (r / 12.92);
-  	g = g > 0.04045 ? Math.pow(((g + 0.055) / 1.055), 2.4) : (g / 12.92);
-  	b = b > 0.04045 ? Math.pow(((b + 0.055) / 1.055), 2.4) : (b / 12.92);
-
-  	var x = (r * 0.41239079926595) + (g * 0.35758433938387) + (b * 0.18048078840183);
-  	var y = (r * 0.21263900587151) + (g * 0.71516867876775) + (b * 0.072192315360733);
-  	var z = (r * 0.019330818715591) + (g * 0.11919477979462) + (b * 0.95053215224966);
-
-  	white = white || xyz.whitepoint[2].E;
-
-  	return [x * white[0], y * white[1], z * white[2]];
-  };
-
-  /**
-   * CIE LUV (C'est la vie)
-   *
-   * @module color-space/luv
-   */
-
-  var luv = {
-  	name: 'luv',
-  	//NOTE: luv has no rigidly defined limits
-  	//easyrgb fails to get proper coords
-  	//boronine states no rigid limits
-  	//colorMine refers this ones:
-  	min: [0, -134, -140],
-  	max: [100, 224, 122],
-  	channel: ['lightness', 'u', 'v'],
-  	alias: ['LUV', 'cieluv', 'cie1976'],
-
-  	xyz: function (arg, i, o) {
-  		var _u, _v, l, u, v, x, y, z, xn, yn, zn, un, vn;
-  		l = arg[0], u = arg[1], v = arg[2];
-
-  		if (l === 0) return [0, 0, 0];
-
-  		//get constants
-  		//var e = 0.008856451679035631; //(6/29)^3
-  		var k = 0.0011070564598794539; //(3/29)^3
-
-  		//get illuminant/observer
-  		i = i || 'D65';
-  		o = o || 2;
-
-  		xn = xyz.whitepoint[o][i][0];
-  		yn = xyz.whitepoint[o][i][1];
-  		zn = xyz.whitepoint[o][i][2];
-
-  		un = (4 * xn) / (xn + (15 * yn) + (3 * zn));
-  		vn = (9 * yn) / (xn + (15 * yn) + (3 * zn));
-  		// un = 0.19783000664283;
-  		// vn = 0.46831999493879;
-
-
-  		_u = u / (13 * l) + un || 0;
-  		_v = v / (13 * l) + vn || 0;
-
-  		y = l > 8 ? yn * Math.pow((l + 16) / 116, 3) : yn * l * k;
-
-  		//wikipedia method
-  		x = y * 9 * _u / (4 * _v) || 0;
-  		z = y * (12 - 3 * _u - 20 * _v) / (4 * _v) || 0;
-
-  		//boronine method
-  		//https://github.com/boronine/husl/blob/master/husl.coffee#L201
-  		// x = 0 - (9 * y * _u) / ((_u - 4) * _v - _u * _v);
-  		// z = (9 * y - (15 * _v * y) - (_v * x)) / (3 * _v);
-
-  		return [x, y, z];
-  	}
-  };
-
-  // http://www.brucelindbloom.com/index.html?Equations.html
-  // https://github.com/boronine/husl/blob/master/husl.coffee
-  //i - illuminant
-  //o - observer
-  xyz.luv = function (arg, i, o) {
-  	var _u, _v, l, u, v, x, y, z, xn, yn, zn, un, vn;
-
-  	//get constants
-  	var e = 0.008856451679035631; //(6/29)^3
-  	var k = 903.2962962962961; //(29/3)^3
-
-  	//get illuminant/observer coords
-  	i = i || 'D65';
-  	o = o || 2;
-
-  	xn = xyz.whitepoint[o][i][0];
-  	yn = xyz.whitepoint[o][i][1];
-  	zn = xyz.whitepoint[o][i][2];
-
-  	un = (4 * xn) / (xn + (15 * yn) + (3 * zn));
-  	vn = (9 * yn) / (xn + (15 * yn) + (3 * zn));
-
-
-  	x = arg[0], y = arg[1], z = arg[2];
-
-
-  	_u = (4 * x) / (x + (15 * y) + (3 * z)) || 0;
-  	_v = (9 * y) / (x + (15 * y) + (3 * z)) || 0;
-
-  	var yr = y / yn;
-
-  	l = yr <= e ? k * yr : 116 * Math.pow(yr, 1 / 3) - 16;
-
-  	u = 13 * l * (_u - un);
-  	v = 13 * l * (_v - vn);
-
-  	return [l, u, v];
-  };
-
-  /**
-   * Cylindrical CIE LUV
-   *
-   * @module color-space/lchuv
-   */
-
-  // cylindrical luv
-  var lchuv = {
-  	name: 'lchuv',
-  	channel: ['lightness', 'chroma', 'hue'],
-  	alias: ['LCHuv', 'cielchuv'],
-  	min: [0, 0, 0],
-  	max: [100, 100, 360],
-
-  	luv: function (luv) {
-  		var l = luv[0],
-  			c = luv[1],
-  			h = luv[2],
-  			u, v, hr;
-
-  		hr = h / 360 * 2 * Math.PI;
-  		u = c * Math.cos(hr);
-  		v = c * Math.sin(hr);
-  		return [l, u, v];
-  	},
-
-  	xyz: function (arg) {
-  		return luv.xyz(lchuv.luv(arg));
-  	}
-  };
-
-  luv.lchuv = function (luv) {
-  	var l = luv[0], u = luv[1], v = luv[2];
-
-  	var c = Math.sqrt(u * u + v * v);
-  	var hr = Math.atan2(v, u);
-  	var h = hr * 360 / 2 / Math.PI;
-  	if (h < 0) {
-  		h += 360;
-  	}
-
-  	return [l, c, h]
-  };
-
-  xyz.lchuv = function (arg) {
-  	return luv.lchuv(xyz.luv(arg));
-  };
-
   /**
    * @module ol/color
    */
@@ -19948,6 +19248,112 @@
    * @type {Color}
    */
   const NO_COLOR = [NaN, NaN, NaN, 0];
+
+  let colorParseContext;
+  /**
+   * @return {CanvasRenderingContext2D} The color parse context
+   */
+  function getColorParseContext() {
+    if (!colorParseContext) {
+      colorParseContext = createCanvasContext2D(1, 1, undefined, {
+        willReadFrequently: true,
+        desynchronized: true,
+      });
+    }
+    return colorParseContext;
+  }
+
+  const rgbModernRegEx =
+    /^rgba?\(\s*(\d+%?)\s+(\d+%?)\s+(\d+%?)(?:\s*\/\s*(\d+%|\d*\.\d+|[01]))?\s*\)$/i;
+  const rgbLegacyAbsoluteRegEx =
+    /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d+%|\d*\.\d+|[01]))?\s*\)$/i;
+  const rgbLegacyPercentageRegEx =
+    /^rgba?\(\s*(\d+%)\s*,\s*(\d+%)\s*,\s*(\d+%)(?:\s*,\s*(\d+%|\d*\.\d+|[01]))?\s*\)$/i;
+  const hexRegEx = /^#([\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i;
+
+  /**
+   * @param {string} s Color component as number or percentage.
+   * @param {number} divider Divider for percentage.
+   * @return {number} Color component.
+   */
+  function toColorComponent(s, divider) {
+    return s.endsWith('%')
+      ? Number(s.substring(0, s.length - 1)) / divider
+      : Number(s);
+  }
+
+  /**
+   * @param {string} color Color string.
+   */
+  function throwInvalidColor(color) {
+    throw new Error('failed to parse "' + color + '" as color');
+  }
+
+  /**
+   * @param {string} color Color string.
+   * @return {Color} RGBa color array.
+   */
+  function parseRgba(color) {
+    // Fast lane for rgb(a) colors
+    if (color.toLowerCase().startsWith('rgb')) {
+      const rgb =
+        color.match(rgbLegacyAbsoluteRegEx) ||
+        color.match(rgbModernRegEx) ||
+        color.match(rgbLegacyPercentageRegEx);
+      if (rgb) {
+        const alpha = rgb[4];
+        const rgbDivider = 100 / 255;
+        return [
+          clamp((toColorComponent(rgb[1], rgbDivider) + 0.5) | 0, 0, 255),
+          clamp((toColorComponent(rgb[2], rgbDivider) + 0.5) | 0, 0, 255),
+          clamp((toColorComponent(rgb[3], rgbDivider) + 0.5) | 0, 0, 255),
+          alpha !== undefined ? clamp(toColorComponent(alpha, 100), 0, 1) : 1,
+        ];
+      }
+      throwInvalidColor(color);
+    }
+    // Fast lane for hex colors (also with alpha)
+    if (color.startsWith('#')) {
+      if (hexRegEx.test(color)) {
+        const hex = color.substring(1);
+        const step = hex.length <= 4 ? 1 : 2;
+        const colorFromHex = [0, 0, 0, 255];
+        for (let i = 0, ii = hex.length; i < ii; i += step) {
+          let colorComponent = parseInt(hex.substring(i, i + step), 16);
+          if (step === 1) {
+            colorComponent += colorComponent << 4;
+          }
+          colorFromHex[i / step] = colorComponent;
+        }
+        colorFromHex[3] = colorFromHex[3] / 255;
+        return colorFromHex;
+      }
+      throwInvalidColor(color);
+    }
+    // Use canvas color serialization to parse the color into hex or rgba
+    // See https://www.w3.org/TR/2021/SPSD-2dcontext-20210128/#serialization-of-a-color
+    const context = getColorParseContext();
+    context.fillStyle = '#abcdef';
+    let invalidCheckFillStyle = context.fillStyle;
+    context.fillStyle = color;
+    if (context.fillStyle === invalidCheckFillStyle) {
+      context.fillStyle = '#fedcba';
+      invalidCheckFillStyle = context.fillStyle;
+      context.fillStyle = color;
+      if (context.fillStyle === invalidCheckFillStyle) {
+        throwInvalidColor(color);
+      }
+    }
+    const colorString = context.fillStyle;
+    if (colorString.startsWith('#') || colorString.startsWith('rgba')) {
+      return parseRgba(colorString);
+    }
+    context.clearRect(0, 0, 1, 1);
+    context.fillRect(0, 0, 1, 1);
+    const colorFromImage = Array.from(context.getImageData(0, 0, 1, 1).data);
+    colorFromImage[3] = toFixed(colorFromImage[3] / 255, 3);
+    return colorFromImage;
+  }
 
   /**
    * Return the color as an rgba string.
@@ -19995,14 +19401,59 @@
     return output;
   }
 
+  // The functions b1, b2, a1, a2, rgbaToLcha and lchaToRgba below are adapted from
+  // https://stackoverflow.com/a/67219995/2389327
+
+  /**
+   * @param {number} v Input value.
+   * @return {number} Output value.
+   */
+  function b1(v) {
+    return v > 0.0031308 ? Math.pow(v, 1 / 2.4) * 269.025 - 14.025 : v * 3294.6;
+  }
+
+  /**
+   * @param {number} v Input value.
+   * @return {number} Output value.
+   */
+  function b2(v) {
+    return v > 0.2068965 ? Math.pow(v, 3) : (v - 4 / 29) * (108 / 841);
+  }
+
+  /**
+   * @param {number} v Input value.
+   * @return {number} Output value.
+   */
+  function a1(v) {
+    return v > 10.314724 ? Math.pow((v + 14.025) / 269.025, 2.4) : v / 3294.6;
+  }
+
+  /**
+   * @param {number} v Input value.
+   * @return {number} Output value.
+   */
+  function a2(v) {
+    return v > 0.0088564 ? Math.pow(v, 1 / 3) : v / (108 / 841) + 4 / 29;
+  }
+
   /**
    * @param {Color} color RGBA color.
    * @return {Color} LCHuv color with alpha.
    */
   function rgbaToLcha(color) {
-    const output = xyz.lchuv(rgb.xyz(color));
-    output[3] = color[3];
-    return output;
+    const r = a1(color[0]);
+    const g = a1(color[1]);
+    const b = a1(color[2]);
+    const y = a2(r * 0.222488403 + g * 0.716873169 + b * 0.06060791);
+    const l = 500 * (a2(r * 0.452247074 + g * 0.399439023 + b * 0.148375274) - y);
+    const q = 200 * (y - a2(r * 0.016863605 + g * 0.117638439 + b * 0.865350722));
+    const h = Math.atan2(q, l) * (180 / Math.PI);
+    return [
+      116 * y - 16,
+      Math.sqrt(l * l + q * q),
+      h < 0 ? h + 360 : h,
+      color[3],
+    ];
   }
 
   /**
@@ -20010,9 +19461,21 @@
    * @return {Color} RGBA color.
    */
   function lchaToRgba(color) {
-    const output = xyz.rgb(lchuv.xyz(color));
-    output[3] = color[3];
-    return output;
+    const l = (color[0] + 16) / 116;
+    const c = color[1];
+    const h = (color[2] * Math.PI) / 180;
+    const y = b2(l);
+    const x = b2(l + (c / 500) * Math.cos(h));
+    const z = b2(l - (c / 200) * Math.sin(h));
+    const r = b1(x * 3.021973625 - y * 1.617392459 - z * 0.404875592);
+    const g = b1(x * -0.943766287 + y * 1.916279586 + z * 0.027607165);
+    const b = b1(x * 0.069407491 - y * 0.22898585 + z * 1.159737864);
+    return [
+      clamp((r + 0.5) | 0, 0, 255),
+      clamp((g + 0.5) | 0, 0, 255),
+      clamp((b + 0.5) | 0, 0, 255),
+      color[3],
+    ];
   }
 
   /**
@@ -20036,16 +19499,15 @@
       }
     }
 
-    const color = rgba(s);
+    const color = parseRgba(s);
     if (color.length !== 4) {
-      throw new Error('failed to parse "' + s + '" as color');
+      throwInvalidColor(s);
     }
     for (const c of color) {
       if (isNaN(c)) {
-        throw new Error('failed to parse "' + s + '" as color');
+        throwInvalidColor(s);
       }
     }
-    normalize(color);
     cache[s] = color;
     ++cacheSize;
     return color;
@@ -20063,19 +19525,6 @@
       return color;
     }
     return fromString(color);
-  }
-
-  /**
-   * Exported for the tests.
-   * @param {Color} color Color.
-   * @return {Color} Clamped color.
-   */
-  function normalize(color) {
-    color[0] = clamp((color[0] + 0.5) | 0, 0, 255);
-    color[1] = clamp((color[1] + 0.5) | 0, 0, 255);
-    color[2] = clamp((color[2] + 0.5) | 0, 0, 255);
-    color[3] = clamp(color[3], 0, 1);
-    return color;
   }
 
   /**
@@ -20246,6 +19695,7 @@
    *   * `['any', value1, value2, ...]` returns `true` if any of the inputs are `true`, `false` otherwise.
    *   * `['has', attributeName, keyOrArrayIndex, ...]` returns `true` if feature properties include the (nested) key `attributeName`,
    *     `false` otherwise.
+   *     Note that for WebGL layers, the hardcoded value `-9999999` is used to distinguish when a property is not defined.
    *   * `['between', value1, value2, value3]` returns `true` if `value1` is contained between `value2` and `value3`
    *     (inclusively), or `false` otherwise.
    *   * `['in', needle, haystack]` returns `true` if `needle` is found in `haystack`, and
@@ -21689,7 +21139,7 @@
     }
     return (context) => {
       const value = args[0](context);
-      for (let i = 1; i < length; i += 2) {
+      for (let i = 1; i < length - 1; i += 2) {
         if (value === args[i](context)) {
           return args[i + 1](context);
         }
@@ -21832,7 +21282,7 @@
       lcha1[2] + interpolateNumber(base, value, input1, 0, input2, deltaHue),
       interpolateNumber(base, value, input1, rgba1[3], input2, rgba2[3]),
     ];
-    return normalize(lchaToRgba(lcha));
+    return lchaToRgba(lcha);
   }
 
   /**
@@ -25351,7 +24801,7 @@
     /**
      * Set a geometry that is rendered instead of the feature's geometry.
      *
-     * @param {string|import("../geom/Geometry.js").default|GeometryFunction} geometry
+     * @param {string|import("../geom/Geometry.js").default|GeometryFunction|null} geometry
      *     Feature property or geometry or function returning a geometry to render
      *     for this style.
      * @api
@@ -27594,7 +27044,7 @@
    * @template {import('../Feature').FeatureLike} FeatureType
    * @template {import("../source/Vector.js").default<FeatureType>|import("../source/VectorTile.js").default<FeatureType>} VectorSourceType<FeatureType>
    * @extends {Layer<VectorSourceType, RendererType>}
-   * @template {import("../renderer/canvas/VectorLayer.js").default|import("../renderer/canvas/VectorTileLayer.js").default|import("../renderer/canvas/VectorImageLayer.js").default|import("../renderer/webgl/PointsLayer.js").default} RendererType
+   * @template {import("../renderer/canvas/VectorLayer.js").default|import("../renderer/canvas/VectorTileLayer.js").default|import("../renderer/canvas/VectorImageLayer.js").default|import("../renderer/webgl/VectorLayer.js").default|import("../renderer/webgl/PointsLayer.js").default} RendererType
    * @api
    */
   class BaseVectorLayer extends Layer {
@@ -28947,6 +28397,9 @@
      * Detect features that intersect a pixel on the viewport, and execute a
      * callback with each intersecting feature. Layers included in the detection can
      * be configured through the `layerFilter` option in `options`.
+     * For polygons without a fill, only the stroke will be used for hit detection.
+     * Polygons must have a fill style applied to ensure that pixels inside a polygon are detected.
+     * The fill can be transparent.
      * @param {import("./pixel.js").Pixel} pixel Pixel.
      * @param {function(import("./Feature.js").FeatureLike, import("./layer/Layer.js").default<import("./source/Source").default>, import("./geom/SimpleGeometry.js").default): T} callback Feature callback. The callback will be
      *     called with two arguments. The first argument is one
@@ -28986,6 +28439,9 @@
 
     /**
      * Get all features that intersect a pixel on the viewport.
+     * For polygons without a fill, only the stroke will be used for hit detection.
+     * Polygons must have a fill style applied to ensure that pixels inside a polygon are detected.
+     * The fill can be transparent.
      * @param {import("./pixel.js").Pixel} pixel Pixel.
      * @param {AtPixelOptions} [options] Optional options.
      * @return {Array<import("./Feature.js").FeatureLike>} The detected features or
@@ -29027,6 +28483,9 @@
     /**
      * Detect if features intersect a pixel on the viewport. Layers included in the
      * detection can be configured through the `layerFilter` option.
+     * For polygons without a fill, only the stroke will be used for hit detection.
+     * Polygons must have a fill style applied to ensure that pixels inside a polygon are detected.
+     * The fill can be transparent.
      * @param {import("./pixel.js").Pixel} pixel Pixel.
      * @param {AtPixelOptions} [options] Optional options.
      * @return {boolean} Is there a feature at the given pixel?
@@ -29374,7 +28833,7 @@
     }
 
     /**
-     * @param {UIEvent} browserEvent Browser event.
+     * @param {PointerEvent|KeyboardEvent|WheelEvent} browserEvent Browser event.
      * @param {string} [type] Type.
      */
     handleBrowserEvent(browserEvent, type) {
@@ -29392,9 +28851,7 @@
         // coordinates so interactions cannot be used.
         return;
       }
-      const originalEvent = /** @type {PointerEvent} */ (
-        mapBrowserEvent.originalEvent
-      );
+      const originalEvent = mapBrowserEvent.originalEvent;
       const eventType = originalEvent.type;
       if (
         eventType === PointerEventType.POINTERDOWN ||
@@ -29962,7 +29419,7 @@
 
     /**
      * Set the view for this map.
-     * @param {View|Promise<import("./View.js").ViewOptions>} view The view that controls this map.
+     * @param {View|Promise<import("./View.js").ViewOptions>|null} view The view that controls this map.
      * It is also possible to pass a promise that resolves to options for constructing a view.  This
      * alternative allows view properties to be resolved by sources or other components that load
      * view-related metadata.
@@ -32069,6 +31526,27 @@
     }
 
     /**
+     * Return the sum of all line string lengths
+     * @return {number} Length (on projected plane).
+     * @api
+     */
+    getLength() {
+      const ends = this.ends_;
+      let start = 0;
+      let length = 0;
+      for (let i = 0, ii = ends.length; i < ii; ++i) {
+        length += lineStringLength(
+          this.flatCoordinates,
+          start,
+          ends[i],
+          this.stride,
+        );
+        start = ends[i];
+      }
+      return length;
+    }
+
+    /**
      * @return {Array<number>} Flat midpoints.
      */
     getFlatMidpoints() {
@@ -33581,7 +33059,7 @@
     if (
       featureProjection &&
       dataProjection &&
-      !equivalent(featureProjection, dataProjection)
+      !equivalent$1(featureProjection, dataProjection)
     ) {
       if (write) {
         transformed = /** @type {T} */ (geometry.clone());
@@ -33633,7 +33111,7 @@
     if (
       featureProjection &&
       dataProjection &&
-      !equivalent(featureProjection, dataProjection)
+      !equivalent$1(featureProjection, dataProjection)
     ) {
       return transformExtent(extent, dataProjection, featureProjection);
     }
@@ -40295,12 +39773,33 @@
     node.appendChild(getDocument().createTextNode(string));
   }
 
+  const whiteSpaceStart = /^\s/;
+  const whiteSpaceEnd = /\s$/;
+  const cdataCharacters = /(\n|\t|\r|<|&| {2})/;
+
   /**
    * @param {Node} node Node to append a TextNode with the string to.
    * @param {string} string String.
    */
   function writeStringTextNode(node, string) {
-    node.appendChild(getDocument().createTextNode(string));
+    if (
+      typeof string === 'string' &&
+      (whiteSpaceStart.test(string) ||
+        whiteSpaceEnd.test(string) ||
+        cdataCharacters.test(string))
+    ) {
+      string.split(']]>').forEach((part, i, a) => {
+        if (i < a.length - 1) {
+          part += ']]';
+        }
+        if (i > 0) {
+          part = '>' + part;
+        }
+        writeCDATASection(node, part);
+      });
+    } else {
+      node.appendChild(getDocument().createTextNode(string));
+    }
   }
 
   /**
@@ -46817,7 +46316,7 @@
    * @param {string} name DisplayName.
    */
   function writeDataNodeName(node, name) {
-    writeCDATASection(node, name);
+    writeStringTextNode(node, name);
   }
 
   /**
@@ -57759,21 +57258,28 @@
               // we only accept calling functions on the proxy, not accessing properties
               return undefined;
             }
-            if (!this.instructions_[this.zIndex + this.offset_]) {
-              this.instructions_[this.zIndex + this.offset_] = [];
-            }
-            this.instructions_[this.zIndex + this.offset_].push(property);
+            this.push_(property);
             return this.pushMethodArgs_;
           },
           set: (target, property, value) => {
-            if (!this.instructions_[this.zIndex + this.offset_]) {
-              this.instructions_[this.zIndex + this.offset_] = [];
-            }
-            this.instructions_[this.zIndex + this.offset_].push(property, value);
+            this.push_(property, value);
             return true;
           },
         })
       );
+    }
+
+    /**
+     * @param {...*} args Arguments to push to the instructions array.
+     * @private
+     */
+    push_(...args) {
+      const instructions = this.instructions_;
+      const index = this.zIndex + this.offset_;
+      if (!instructions[index]) {
+        instructions[index] = [];
+      }
+      instructions[index].push(...args);
     }
 
     /**
@@ -57782,7 +57288,7 @@
      * @return {ZIndexContext} This.
      */
     pushMethodArgs_ = (...args) => {
-      this.instructions_[this.zIndex + this.offset_].push(args);
+      this.push_(args);
       return this;
     };
 
@@ -57791,7 +57297,7 @@
      * @param {function(CanvasRenderingContext2D): void} render Function.
      */
     pushFunction(render) {
-      this.instructions_[this.zIndex + this.offset_].push(render);
+      this.push_(render);
     }
 
     /**
@@ -57936,6 +57442,20 @@
     }
     acc.push(line, '');
     return acc;
+  }
+
+  /**
+   * Converts rich text to plain text for text along lines.
+   * @param {string} result The resulting plain text.
+   * @param {string} part Item of the rich text array.
+   * @param {number} index Index of the item in the rich text array.
+   * @return {string} The resulting plain text.
+   */
+  function richTextToPlainText(result, part, index) {
+    if (index % 2 === 0) {
+      result += part;
+    }
+    return result;
   }
 
   class Executor {
@@ -58818,7 +58338,11 @@
             const offsetY = /** @type {number} */ (instruction[8]);
             strokeKey = /** @type {string} */ (instruction[9]);
             const strokeWidth = /** @type {number} */ (instruction[10]);
-            text = /** @type {string} */ (instruction[11]);
+            text = /** @type {string|Array<string>} */ (instruction[11]);
+            if (Array.isArray(text)) {
+              //FIXME Add support for rich text along lines
+              text = text.reduce(richTextToPlainText, '');
+            }
             textKey = /** @type {string} */ (instruction[12]);
             const pixelRatioScale = [
               /** @type {number} */ (instruction[13]),
@@ -59332,8 +58856,6 @@
         this.hitDetectionContext_ = createCanvasContext2D(
           contextSize,
           contextSize,
-          undefined,
-          {willReadFrequently: true},
         );
       }
       const context = this.hitDetectionContext_;
@@ -61539,7 +61061,7 @@
      * @abstract
      * @param {import("../Map.js").FrameState} frameState Frame state.
      * @param {HTMLElement|null} target Target that may be used to render content to.
-     * @return {HTMLElement|null} The rendered element.
+     * @return {HTMLElement} The rendered element.
      */
     renderFrame(frameState, target) {
       return abstract();
@@ -61767,7 +61289,7 @@
     /**
      * Get a rendering container from an existing target, if compatible.
      * @param {HTMLElement} target Potential render target.
-     * @param {string} transform CSS Transform.
+     * @param {string} transform CSS transform matrix.
      * @param {string} [backgroundColor] Background color.
      */
     useContainer(target, transform, backgroundColor) {
@@ -61789,7 +61311,7 @@
           context = canvas.getContext('2d');
         }
       }
-      if (context && context.canvas.style.transform === transform) {
+      if (context && equivalent(context.canvas.style.transform, transform)) {
         // Container of the previous layer renderer can be used.
         this.container = target;
         this.context = context;
@@ -62297,7 +61819,7 @@
      * Render the layer.
      * @param {import("../../Map.js").FrameState} frameState Frame state.
      * @param {HTMLElement|null} target Target that may be used to render content to.
-     * @return {HTMLElement|null} The rendered element.
+     * @return {HTMLElement} The rendered element.
      * @override
      */
     renderFrame(frameState, target) {
@@ -62315,7 +61837,7 @@
           this.getLayer().hasListener(RenderEventType.PRERENDER) ||
           this.getLayer().hasListener(RenderEventType.POSTRENDER);
         if (!hasRenderListeners) {
-          return null;
+          return this.container;
         }
       }
 
@@ -63061,7 +62583,12 @@
             success(features);
           }
         },
-        /* FIXME handle error */ failure ? failure : VOID,
+        () => {
+          this.changed();
+          if (failure !== undefined) {
+            failure();
+          }
+        },
       );
     };
   }
@@ -65781,7 +65308,7 @@
 
     /**
      * Handles the {@link module:ol/MapBrowserEvent~MapBrowserEvent map browser event} and may actually draw or finish the drawing.
-     * @param {import("../MapBrowserEvent.js").default} event Map browser event.
+     * @param {import("../MapBrowserEvent.js").default<PointerEvent>} event Map browser event.
      * @return {boolean} `false` to stop event propagation.
      * @api
      * @override
@@ -65848,7 +65375,7 @@
 
     /**
      * Handle pointer down events.
-     * @param {import("../MapBrowserEvent.js").default} event Event.
+     * @param {import("../MapBrowserEvent.js").default<PointerEvent>} event Event.
      * @return {boolean} If the event was consumed.
      * @override
      */
@@ -66099,7 +65626,7 @@
 
     /**
      * Handle pointer up events.
-     * @param {import("../MapBrowserEvent.js").default} event Event.
+     * @param {import("../MapBrowserEvent.js").default<PointerEvent>} event Event.
      * @return {boolean} If the event was consumed.
      * @override
      */
@@ -66149,7 +65676,7 @@
 
     /**
      * Handle move events.
-     * @param {import("../MapBrowserEvent.js").default} event A move event.
+     * @param {import("../MapBrowserEvent.js").default<PointerEvent>} event A move event.
      * @private
      */
     handlePointerMove_(event) {
@@ -69058,6 +68585,7 @@
      * @api
      */
     SNAP: 'snap',
+    UNSNAP: 'unsnap',
   };
 
   /**
@@ -69107,28 +68635,227 @@
    */
 
   /**
-   * @typedef {Object} Result
-   * @property {import("../coordinate.js").Coordinate|null} vertex Vertex.
-   * @property {import("../pixel.js").Pixel|null} vertexPixel VertexPixel.
-   * @property {import("../Feature.js").default|null} feature Feature.
-   * @property {Array<import("../coordinate.js").Coordinate>|null} segment Segment, or `null` if snapped to a vertex.
+   * @typedef {Array<import("../coordinate.js").Coordinate>} Segment
+   * An array of two coordinates representing a line segment, or an array of one
+   * coordinate representing a point.
    */
 
   /**
    * @typedef {Object} SegmentData
    * @property {import("../Feature.js").default} feature Feature.
-   * @property {Array<import("../coordinate.js").Coordinate>} segment Segment.
+   * @property {Segment} segment Segment.
+   * @property {boolean} [isIntersection] Is intersection.
+   */
+
+  /**
+   * @template {import("../geom/Geometry.js").default} [GeometryType=import("../geom/Geometry.js").default]
+   * @typedef {(geometry: GeometryType, projection?: import("../proj/Projection.js").default) => Array<Segment>} Segmenter
+   * A function taking a {@link module:ol/geom/Geometry~Geometry} as argument and returning an array of {@link Segment}s.
+   */
+
+  /**
+   * Each segmenter specified here will override the default segmenter for the
+   * corresponding geometry type. To exclude all geometries of a specific geometry type from being snapped to,
+   * set the segmenter to `null`.
+   * @typedef {Object} Segmenters
+   * @property {Segmenter<import("../geom/Point.js").default>|null} [Point] Point segmenter.
+   * @property {Segmenter<import("../geom/LineString.js").default>|null} [LineString] LineString segmenter.
+   * @property {Segmenter<import("../geom/Polygon.js").default>|null} [Polygon] Polygon segmenter.
+   * @property {Segmenter<import("../geom/Circle.js").default>|null} [Circle] Circle segmenter.
+   * @property {Segmenter<import("../geom/GeometryCollection.js").default>|null} [GeometryCollection] GeometryCollection segmenter.
+   * @property {Segmenter<import("../geom/MultiPoint.js").default>|null} [MultiPoint] MultiPoint segmenter.
+   * @property {Segmenter<import("../geom/MultiLineString.js").default>|null} [MultiLineString] MultiLineString segmenter.
+   * @property {Segmenter<import("../geom/MultiPolygon.js").default>|null} [MultiPolygon] MultiPolygon segmenter.
    */
 
   /**
    * @typedef {Object} Options
    * @property {import("../Collection.js").default<import("../Feature.js").default>} [features] Snap to these features. Either this option or source should be provided.
+   * @property {import("../source/Vector.js").default} [source] Snap to features from this source. Either this option or features should be provided
    * @property {boolean} [edge=true] Snap to edges.
    * @property {boolean} [vertex=true] Snap to vertices.
+   * @property {boolean} [intersection=false] Snap to intersections between segments.
    * @property {number} [pixelTolerance=10] Pixel tolerance for considering the pointer close enough to a segment or
    * vertex for snapping.
-   * @property {import("../source/Vector.js").default} [source] Snap to features from this source. Either this option or features should be provided
+   * @property {Segmenters} [segmenters] Custom segmenters by {@link module:ol/geom/Geometry~Type}. By default, the
+   * following segmenters are used:
+   *   - `Point`: A one-dimensional segment (e.g. `[[10, 20]]`) representing the point.
+   *   - `LineString`: One two-dimensional segment (e.g. `[[10, 20], [30, 40]]`) for each segment of the linestring.
+   *   - `Polygon`: One two-dimensional segment for each segment of the exterior ring and the interior rings.
+   *   - `Circle`: One two-dimensional segment for each segment of a regular polygon with 32 points representing the circle circumference.
+   *   - `GeometryCollection`: All segments of the contained geometries.
+   *   - `MultiPoint`: One one-dimensional segment for each point.
+   *   - `MultiLineString`: One two-dimensional segment for each segment of the linestrings.
+   *   - `MultiPolygon`: One two-dimensional segment for each segment of the polygons.
    */
+
+  /**
+   * Information about the last snapped state.
+   * @typedef {Object} SnappedInfo
+   * @property {import("../coordinate.js").Coordinate|null} vertex - The snapped vertex.
+   * @property {import("../pixel.js").Pixel|null} vertexPixel - The pixel of the snapped vertex.
+   * @property {import("../Feature.js").default|null} feature - The feature being snapped.
+   * @property {Segment|null} segment - Segment, or `null` if snapped to a vertex.
+   */
+
+  /***
+   * @type {Object<string, Segmenter>}
+   */
+  const GEOMETRY_SEGMENTERS = {
+    /**
+     * @param {import("../geom/Circle.js").default} geometry Geometry.
+     * @param {import("../proj/Projection.js").default} projection Projection.
+     * @return {Array<Segment>} Segments
+     */
+    Circle(geometry, projection) {
+      let circleGeometry = geometry;
+      const userProjection = getUserProjection();
+      if (userProjection) {
+        circleGeometry = circleGeometry
+          .clone()
+          .transform(userProjection, projection);
+      }
+      const polygon = fromCircle(circleGeometry);
+      if (userProjection) {
+        polygon.transform(projection, userProjection);
+      }
+      return GEOMETRY_SEGMENTERS.Polygon(polygon);
+    },
+
+    /**
+     * @param {import("../geom/GeometryCollection.js").default} geometry Geometry.
+     * @param {import("../proj/Projection.js").default} projection Projection.
+     * @return {Array<Segment>} Segments
+     */
+    GeometryCollection(geometry, projection) {
+      /** @type {Array<Array<Segment>>} */
+      const segments = [];
+      const geometries = geometry.getGeometriesArray();
+      for (let i = 0; i < geometries.length; ++i) {
+        const segmenter = GEOMETRY_SEGMENTERS[geometries[i].getType()];
+        if (segmenter) {
+          segments.push(segmenter(geometries[i], projection));
+        }
+      }
+      return segments.flat();
+    },
+
+    /**
+     * @param {import("../geom/LineString.js").default} geometry Geometry.
+     * @return {Array<Segment>} Segments
+     */
+    LineString(geometry) {
+      /** @type {Array<Segment>} */
+      const segments = [];
+      const coordinates = geometry.getFlatCoordinates();
+      const stride = geometry.getStride();
+      for (let i = 0, ii = coordinates.length - stride; i < ii; i += stride) {
+        segments.push([
+          coordinates.slice(i, i + 2),
+          coordinates.slice(i + stride, i + stride + 2),
+        ]);
+      }
+      return segments;
+    },
+
+    /**
+     * @param {import("../geom/MultiLineString.js").default} geometry Geometry.
+     * @return {Array<Segment>} Segments
+     */
+    MultiLineString(geometry) {
+      /** @type {Array<Segment>} */
+      const segments = [];
+      const coordinates = geometry.getFlatCoordinates();
+      const stride = geometry.getStride();
+      const ends = geometry.getEnds();
+      let offset = 0;
+      for (let i = 0, ii = ends.length; i < ii; ++i) {
+        const end = ends[i];
+        for (let j = offset, jj = end - stride; j < jj; j += stride) {
+          segments.push([
+            coordinates.slice(j, j + 2),
+            coordinates.slice(j + stride, j + stride + 2),
+          ]);
+        }
+        offset = end;
+      }
+      return segments;
+    },
+
+    /**
+     * @param {import("../geom/MultiPoint.js").default} geometry Geometry.
+     * @return {Array<Segment>} Segments
+     */
+    MultiPoint(geometry) {
+      /** @type {Array<Segment>} */
+      const segments = [];
+      const coordinates = geometry.getFlatCoordinates();
+      const stride = geometry.getStride();
+      for (let i = 0, ii = coordinates.length - stride; i < ii; i += stride) {
+        segments.push([coordinates.slice(i, i + 2)]);
+      }
+      return segments;
+    },
+
+    /**
+     * @param {import("../geom/MultiPolygon.js").default} geometry Geometry.
+     * @return {Array<Segment>} Segments
+     */
+    MultiPolygon(geometry) {
+      /** @type {Array<Segment>} */
+      const segments = [];
+      const coordinates = geometry.getFlatCoordinates();
+      const stride = geometry.getStride();
+      const endss = geometry.getEndss();
+      let offset = 0;
+      for (let i = 0, ii = endss.length; i < ii; ++i) {
+        const ends = endss[i];
+        for (let j = 0, jj = ends.length; j < jj; ++j) {
+          const end = ends[j];
+          for (let k = offset, kk = end - stride; k < kk; k += stride) {
+            segments.push([
+              coordinates.slice(k, k + 2),
+              coordinates.slice(k + stride, k + stride + 2),
+            ]);
+          }
+          offset = end;
+        }
+      }
+      return segments;
+    },
+
+    /**
+     * @param {import("../geom/Point.js").default} geometry Geometry.
+     * @return {Array<Segment>} Segments
+     */
+    Point(geometry) {
+      return [[geometry.getFlatCoordinates().slice(0, 2)]];
+    },
+
+    /**
+     * @param {import("../geom/Polygon.js").default} geometry Geometry.
+     * @return {Array<Segment>} Segments
+     */
+    Polygon(geometry) {
+      /** @type {Array<Segment>} */
+      const segments = [];
+      const coordinates = geometry.getFlatCoordinates();
+      const stride = geometry.getStride();
+      const ends = geometry.getEnds();
+      let offset = 0;
+      for (let i = 0, ii = ends.length; i < ii; ++i) {
+        const end = ends[i];
+        for (let j = offset, jj = end - stride; j < jj; j += stride) {
+          segments.push([
+            coordinates.slice(j, j + 2),
+            coordinates.slice(j + stride, j + stride + 2),
+          ]);
+        }
+        offset = end;
+      }
+      return segments;
+    },
+  };
 
   /**
    * @param  {import("../source/Vector.js").VectorSourceEvent|import("../Collection.js").CollectionEvent<import("../Feature.js").default>} evt Event.
@@ -69154,15 +68881,19 @@
   }
 
   const tempSegment = [];
+  /** @type {Array<import('../extent.js').Extent>} */
+  const tempExtents = [];
+  /** @type {Array<SegmentData>} */
+  const tempSegmentData = [];
 
   /***
    * @template Return
    * @typedef {import("../Observable").OnSignature<import("../Observable").EventTypes, import("../events/Event.js").default, Return> &
    *   import("../Observable").OnSignature<import("../ObjectEventType").Types|
    *     'change:active', import("../Object").ObjectEvent, Return> &
-   *   import("../Observable").OnSignature<'snap', SnapEvent, Return> &
+   *   import("../Observable").OnSignature<'snap'|'unsnap', SnapEvent, Return> &
    *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("../ObjectEventType").Types|
-   *     'change:active'|'snap', Return>} SnapOnSignature
+   *     'change:active'|'snap'|'unsnap', Return>} SnapOnSignature
    */
 
   /**
@@ -69244,6 +68975,13 @@
       this.edge_ = options.edge !== undefined ? options.edge : true;
 
       /**
+       * @private
+       * @type {boolean}
+       */
+      this.intersection_ =
+        options.intersection !== undefined ? options.intersection : false;
+
+      /**
        * @type {import("../Collection.js").default<import("../Feature.js").default>|null}
        * @private
        */
@@ -69293,21 +69031,21 @@
       this.rBush_ = new RBush();
 
       /**
-       * @const
+       * Holds information about the last snapped state.
+       * @type {SnappedInfo|null}
        * @private
-       * @type {Object<string, function(Array<Array<import('../coordinate.js').Coordinate>>, import("../geom/Geometry.js").default): void>}
        */
-      this.GEOMETRY_SEGMENTERS_ = {
-        'Point': this.segmentPointGeometry_.bind(this),
-        'LineString': this.segmentLineStringGeometry_.bind(this),
-        'LinearRing': this.segmentLineStringGeometry_.bind(this),
-        'Polygon': this.segmentPolygonGeometry_.bind(this),
-        'MultiPoint': this.segmentMultiPointGeometry_.bind(this),
-        'MultiLineString': this.segmentMultiLineStringGeometry_.bind(this),
-        'MultiPolygon': this.segmentMultiPolygonGeometry_.bind(this),
-        'GeometryCollection': this.segmentGeometryCollectionGeometry_.bind(this),
-        'Circle': this.segmentCircleGeometry_.bind(this),
-      };
+      this.snapped_ = null;
+
+      /**
+       * @type {Object<string, Segmenter>}
+       * @private
+       */
+      this.segmenters_ = Object.assign(
+        {},
+        GEOMETRY_SEGMENTERS,
+        options.segmenters,
+      );
     }
 
     /**
@@ -69322,25 +69060,80 @@
       const feature_uid = getUid(feature);
       const geometry = feature.getGeometry();
       if (geometry) {
-        const segmenter = this.GEOMETRY_SEGMENTERS_[geometry.getType()];
+        const segmenter = this.segmenters_[geometry.getType()];
         if (segmenter) {
           this.indexedFeaturesExtents_[feature_uid] =
             geometry.getExtent(createEmpty());
-          const segments =
-            /** @type {Array<Array<import('../coordinate.js').Coordinate>>} */ ([]);
-          segmenter(segments, geometry);
-          if (segments.length === 1) {
-            this.rBush_.insert(boundingExtent(segments[0]), {
-              feature: feature,
-              segment: segments[0],
-            });
-          } else if (segments.length > 1) {
-            const extents = segments.map((s) => boundingExtent(s));
-            const segmentsData = segments.map((segment) => ({
+          const segments = segmenter(
+            geometry,
+            this.getMap().getView().getProjection(),
+          );
+          let segmentCount = segments.length;
+          for (let i = 0; i < segmentCount; ++i) {
+            const segment = segments[i];
+            tempExtents[i] = boundingExtent(segment);
+            tempSegmentData[i] = {
               feature: feature,
               segment: segment,
-            }));
-            this.rBush_.load(extents, segmentsData);
+            };
+          }
+          tempExtents.length = segmentCount;
+          tempSegmentData.length = segmentCount;
+
+          if (this.intersection_) {
+            for (let j = 0, jj = segments.length; j < jj; ++j) {
+              const segment = segments[j];
+              if (segment.length === 1) {
+                continue;
+              }
+              const extent = tempExtents[j];
+              // Calculate intersections with own segments
+              for (let k = 0, kk = segments.length; k < kk; ++k) {
+                if (j === k || j - 1 === k || j + 1 === k) {
+                  // Exclude self and neighbours
+                  continue;
+                }
+                const otherSegment = segments[k];
+                if (!intersects$1(extent, tempExtents[k])) {
+                  continue;
+                }
+                const intersection = getIntersectionPoint(segment, otherSegment);
+                if (!intersection) {
+                  continue;
+                }
+                const intersectionSegment = [intersection];
+                tempExtents[segmentCount] = boundingExtent(intersectionSegment);
+                tempSegmentData[segmentCount++] = {
+                  feature,
+                  segment: intersectionSegment,
+                  isIntersection: true,
+                };
+              }
+              // Calculate intersections with existing segments
+              const otherSegments = this.rBush_.getInExtent(tempExtents[j]);
+              for (const {segment: otherSegment} of otherSegments) {
+                if (otherSegment.length === 1) {
+                  continue;
+                }
+                const intersection = getIntersectionPoint(segment, otherSegment);
+                if (!intersection) {
+                  continue;
+                }
+                const intersectionSegment = [intersection];
+                tempExtents[segmentCount] = boundingExtent(intersectionSegment);
+                tempSegmentData[segmentCount++] = {
+                  feature,
+                  segment: intersectionSegment,
+                  isIntersection: true,
+                };
+              }
+            }
+          }
+
+          if (segmentCount === 1) {
+            this.rBush_.insert(tempExtents[0], tempSegmentData[0]);
+          } else {
+            this.rBush_.load(tempExtents, tempSegmentData);
           }
         }
       }
@@ -69371,6 +69164,19 @@
     }
 
     /**
+     * Checks if two snap data sets are equal.
+     * Compares the segment and the feature.
+     *
+     * @param {SnappedInfo} data1 The first snap data set.
+     * @param {SnappedInfo} data2 The second snap data set.
+     * @return {boolean} `true` if the data sets are equal, otherwise `false`.
+     * @private
+     */
+    areSnapDataEqual_(data1, data2) {
+      return data1.segment === data2.segment && data1.feature === data2.feature;
+    }
+
+    /**
      * @param {import("../MapBrowserEvent.js").default} evt Map browser event.
      * @return {boolean} `false` to stop event propagation.
      * @api
@@ -69378,18 +69184,29 @@
      */
     handleEvent(evt) {
       const result = this.snapTo(evt.pixel, evt.coordinate, evt.map);
+
       if (result) {
         evt.coordinate = result.vertex.slice(0, 2);
         evt.pixel = result.vertexPixel;
-        this.dispatchEvent(
-          new SnapEvent(SnapEventType.SNAP, {
-            vertex: evt.coordinate,
-            vertexPixel: evt.pixel,
-            feature: result.feature,
-            segment: result.segment,
-          }),
-        );
+
+        // Dispatch UNSNAP event if already snapped
+        if (this.snapped_ && !this.areSnapDataEqual_(this.snapped_, result)) {
+          this.dispatchEvent(new SnapEvent(SnapEventType.UNSNAP, this.snapped_));
+        }
+
+        this.snapped_ = {
+          vertex: evt.coordinate,
+          vertexPixel: evt.pixel,
+          feature: result.feature,
+          segment: result.segment,
+        };
+        this.dispatchEvent(new SnapEvent(SnapEventType.SNAP, this.snapped_));
+      } else if (this.snapped_) {
+        // Dispatch UNSNAP event if no longer snapped
+        this.dispatchEvent(new SnapEvent(SnapEventType.UNSNAP, this.snapped_));
+        this.snapped_ = null;
       }
+
       return super.handleEvent(evt);
     }
 
@@ -69440,8 +69257,9 @@
     handleUpEvent(evt) {
       const featuresToUpdate = Object.values(this.pendingFeatures_);
       if (featuresToUpdate.length) {
-        featuresToUpdate.forEach(this.updateFeature_.bind(this));
-        this.pendingFeatures_ = {};
+        for (const feature of featuresToUpdate) {
+          this.updateFeature_(feature);
+        }
       }
       return false;
     }
@@ -69486,9 +69304,10 @@
     setMap(map) {
       const currentMap = this.getMap();
       const keys = this.featuresListenerKeys_;
-      const features = /** @type {Array<import("../Feature.js").default>} */ (
-        this.getFeatures_()
-      );
+      let features = this.getFeatures_();
+      if (!Array.isArray(features)) {
+        features = features.getArray();
+      }
 
       if (currentMap) {
         keys.forEach(unlistenByKey);
@@ -69531,7 +69350,9 @@
             ),
           );
         }
-        features.forEach((feature) => this.addFeature(feature));
+        for (const feature of features) {
+          this.addFeature(feature);
+        }
       }
     }
 
@@ -69539,7 +69360,7 @@
      * @param {import("../pixel.js").Pixel} pixel Pixel
      * @param {import("../coordinate.js").Coordinate} pixelCoordinate Coordinate
      * @param {import("../Map.js").default} map Map.
-     * @return {Result|null} Snap result
+     * @return {SnappedInfo|null} Snap result
      */
     snapTo(pixel, pixelCoordinate, map) {
       const projection = map.getView().getProjection();
@@ -69563,13 +69384,18 @@
       let minSquaredDistance = Infinity;
       let closestFeature;
       let closestSegment = null;
+      let isIntersection;
 
       const squaredPixelTolerance = this.pixelTolerance_ * this.pixelTolerance_;
       const getResult = () => {
         if (closestVertex) {
           const vertexPixel = map.getPixelFromCoordinate(closestVertex);
           const squaredPixelDistance = squaredDistance(pixel, vertexPixel);
-          if (squaredPixelDistance <= squaredPixelTolerance) {
+          if (
+            squaredPixelDistance <= squaredPixelTolerance &&
+            ((isIntersection && this.intersection_) ||
+              (!isIntersection && (this.vertex_ || this.edge_)))
+          ) {
             return {
               vertex: closestVertex,
               vertexPixel: [
@@ -69584,19 +69410,20 @@
         return null;
       };
 
-      if (this.vertex_) {
+      if (this.vertex_ || this.intersection_) {
         for (let i = 0; i < segmentsLength; ++i) {
           const segmentData = segments[i];
           if (segmentData.feature.getGeometry().getType() !== 'Circle') {
-            segmentData.segment.forEach((vertex) => {
+            for (const vertex of segmentData.segment) {
               const tempVertexCoord = fromUserCoordinate(vertex, projection);
               const delta = squaredDistance(projectedCoordinate, tempVertexCoord);
               if (delta < minSquaredDistance) {
                 closestVertex = vertex;
                 minSquaredDistance = delta;
                 closestFeature = segmentData.feature;
+                isIntersection = segmentData.isIntersection;
               }
-            });
+            }
           }
         }
         const result = getResult();
@@ -69660,125 +69487,6 @@
     updateFeature_(feature) {
       this.removeFeature(feature, false);
       this.addFeature(feature, false);
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/Circle.js").default} geometry Geometry.
-     * @private
-     */
-    segmentCircleGeometry_(segments, geometry) {
-      const projection = this.getMap().getView().getProjection();
-      let circleGeometry = geometry;
-      const userProjection = getUserProjection();
-      if (userProjection) {
-        circleGeometry = circleGeometry
-          .clone()
-          .transform(userProjection, projection);
-      }
-      const polygon = fromCircle(circleGeometry);
-      if (userProjection) {
-        polygon.transform(projection, userProjection);
-      }
-      const coordinates = polygon.getCoordinates()[0];
-      for (let i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-        segments.push(coordinates.slice(i, i + 2));
-      }
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/GeometryCollection.js").default} geometry Geometry.
-     * @private
-     */
-    segmentGeometryCollectionGeometry_(segments, geometry) {
-      const geometries = geometry.getGeometriesArray();
-      for (let i = 0; i < geometries.length; ++i) {
-        const segmenter = this.GEOMETRY_SEGMENTERS_[geometries[i].getType()];
-        if (segmenter) {
-          segmenter(segments, geometries[i]);
-        }
-      }
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/LineString.js").default} geometry Geometry.
-     * @private
-     */
-    segmentLineStringGeometry_(segments, geometry) {
-      const coordinates = geometry.getCoordinates();
-      for (let i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-        segments.push(coordinates.slice(i, i + 2));
-      }
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/MultiLineString.js").default} geometry Geometry.
-     * @private
-     */
-    segmentMultiLineStringGeometry_(segments, geometry) {
-      const lines = geometry.getCoordinates();
-      for (let j = 0, jj = lines.length; j < jj; ++j) {
-        const coordinates = lines[j];
-        for (let i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-          segments.push(coordinates.slice(i, i + 2));
-        }
-      }
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/MultiPoint.js").default} geometry Geometry.
-     * @private
-     */
-    segmentMultiPointGeometry_(segments, geometry) {
-      geometry.getCoordinates().forEach((point) => {
-        segments.push([point]);
-      });
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/MultiPolygon.js").default} geometry Geometry.
-     * @private
-     */
-    segmentMultiPolygonGeometry_(segments, geometry) {
-      const polygons = geometry.getCoordinates();
-      for (let k = 0, kk = polygons.length; k < kk; ++k) {
-        const rings = polygons[k];
-        for (let j = 0, jj = rings.length; j < jj; ++j) {
-          const coordinates = rings[j];
-          for (let i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-            segments.push(coordinates.slice(i, i + 2));
-          }
-        }
-      }
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/Point.js").default} geometry Geometry.
-     * @private
-     */
-    segmentPointGeometry_(segments, geometry) {
-      segments.push([geometry.getCoordinates()]);
-    }
-
-    /**
-     * @param {Array<Array<import('../coordinate.js').Coordinate>>} segments Segments
-     * @param {import("../geom/Polygon.js").default} geometry Geometry.
-     * @private
-     */
-    segmentPolygonGeometry_(segments, geometry) {
-      const rings = geometry.getCoordinates();
-      for (let j = 0, jj = rings.length; j < jj; ++j) {
-        const coordinates = rings[j];
-        for (let i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-          segments.push(coordinates.slice(i, i + 2));
-        }
-      }
     }
   }
 
@@ -72589,7 +72297,6 @@
      * @override
      */
     renderFrame(frameState, target) {
-      let allTilesIdle = true;
       this.renderComplete = true;
 
       /**
@@ -72707,9 +72414,6 @@
             tile.endTransition(uid);
             continue;
           }
-        }
-        if (tileState !== TileState.IDLE) {
-          allTilesIdle = false;
         }
         if (tileState !== TileState.ERROR) {
           this.renderComplete = false;
@@ -72903,9 +72607,6 @@
         };
 
         frameState.postRenderFunctions.push(postRenderFunction);
-      }
-      if (!this.renderComplete && !allTilesIdle) {
-        frameState.animate = true;
       }
 
       return this.container;
@@ -74445,7 +74146,7 @@
       if (
         this.getProjection() &&
         projection &&
-        !equivalent(this.getProjection(), projection)
+        !equivalent$1(this.getProjection(), projection)
       ) {
         return 0;
       }
@@ -74479,7 +74180,7 @@
      */
     getTileGridForProjection(projection) {
       const thisProj = this.getProjection();
-      if (this.tileGrid && (!thisProj || equivalent(thisProj, projection))) {
+      if (this.tileGrid && (!thisProj || equivalent$1(thisProj, projection))) {
         return this.tileGrid;
       }
       const projKey = getUid(projection);
@@ -74536,7 +74237,7 @@
       if (
         !sourceProjection ||
         !projection ||
-        equivalent(sourceProjection, projection)
+        equivalent$1(sourceProjection, projection)
       ) {
         return this.getTileInternal(
           z,
@@ -75966,14 +75667,32 @@
     }
 
     /**
-     * Update the user-provided params.
-     * @param {Object} params Params.
+     * @param {Object} params New URL paremeters.
+     * @private
+     */
+    setParams_(params) {
+      this.params_ = params;
+      this.updateV13_();
+      this.setKey(this.getKeyForParams_());
+    }
+
+    /**
+     * Set the URL parameters passed to the WMS source.
+     * @param {Object} params New URL paremeters.
+     * @api
+     */
+    setParams(params) {
+      this.setParams_(Object.assign({}, params));
+    }
+
+    /**
+     * Update the URL parameters. This method can be used to update a subset of the WMS
+     * parameters. Call `setParams` to set all of the parameters.
+     * @param {Object} params Updated URL parameters.
      * @api
      */
     updateParams(params) {
-      Object.assign(this.params_, params);
-      this.updateV13_();
-      this.setKey(this.getKeyForParams_());
+      this.setParams_(Object.assign(this.params_, params));
     }
 
     /**
@@ -88735,7 +88454,7 @@
    */
 
 
-  const VERSION = '1.1.2.dev 21/02/2025 17:22:13';
+  const VERSION = '1.1.2.dev 19/04/2025 17:18:58';
 
   async function trace() {
     const data = [

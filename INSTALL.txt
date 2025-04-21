@@ -1,0 +1,41 @@
+https://www.phpbb.com/downloads/3.3/update
+
+https://www.phpbb.com/support/docs/en/3.3/ug/upgradeguide/update_full/
+
+Delete the following files from the package:
+	config.php file
+	doc/...
+	ext/...
+	files/ directory
+	NO:
+		images/ directory (add git chemineur)
+		store/ directory
+
+On your website, delete all files from your board EXCEPT for:
+	NO:
+		config.php file
+		assets/ directory
+		ext/ directory
+		files/ directory
+		images/ directory
+		store/ directory
+		styles/ directory
+
+Copy from git chemineur
+	assets/...
+	ext/...
+	images/...
+
+Stop chemineur (change /public_html_chemineur name)
+	Move files/...
+	Copy config.php
+		Change database name
+
+Create database / set user, all priorities
+Export / import sql
+
+Change /public_html_chemineur name
+
+Using your web browser, visit /install/app.php/update in your board's root
+
+Delete the install/ directory on the server
