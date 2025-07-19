@@ -166,48 +166,51 @@ class listener implements EventSubscriberInterface
 		// Reduction de la taille de l'image
 		if ($max_size = request_var('size', 0)) {
 			$img_size = @getimagesize ('../files/'.$attachment['physical_filename']);
-			$isx = $img_size [0]; $isy = $img_size [1];
-			$reduction = max ($isx / $max_size, $isy / $max_size);
-			if ($reduction > 1) { // Il faut reduire l'image
-				$pn = pathinfo ($attachment['physical_filename']);
-				$temporaire = '../cache/images/'.$pn['basename'].'.'.$max_size.@$pn['extension'];
+			if ($img_size) {
+				$isx = $img_size[0];
+				$isy = $img_size [1];
+				$reduction = max ($isx / $max_size, $isy / $max_size);
+				if ($reduction > 1) { // Il faut reduire l'image
+					$pn = pathinfo ($attachment['physical_filename']);
+					$temporaire = '../cache/images/'.$pn['basename'].'.'.$max_size.@$pn['extension'];
 
-				// Si le fichier temporaire n'existe pas, il faut le creer
-				if (!is_file ($temporaire)) {
-					$mimetype = explode('/',$attachment['mimetype']);
+					// Si le fichier temporaire n'existe pas, il faut le creer
+					if (!is_file ($temporaire)) {
+						$mimetype = explode('/',$attachment['mimetype']);
 
-					// Get source image
-					$imgcreate = 'imagecreatefrom'.$mimetype[1]; // imagecreatefromjpeg / imagecreatefrompng / imagecreatefromgif
-					$image_src = $imgcreate ('../files/'.$attachment['physical_filename']);
+						// Get source image
+						$imgcreate = 'imagecreatefrom'.$mimetype[1]; // imagecreatefromjpeg / imagecreatefrompng / imagecreatefromgif
+						$image_src = $imgcreate ('../files/'.$attachment['physical_filename']);
 
-					// Detect orientation
-					$angle = [
-						3 => 180,
-						6 => -90,
-						8 =>  90,
-					];
-					$a = @$angle [$exif ['Orientation']];
-					if ($a)
-						$image_src = imagerotate ($image_src, $a, 0);
-					if (abs ($a) == 90) {
-						$tmp = $isx;
-						$isx = $isy;
-						$isy = $tmp;
+						// Detect orientation
+						$angle = [
+							3 => 180,
+							6 => -90,
+							8 =>  90,
+						];
+						$a = @$angle [$exif ['Orientation']];
+						if ($a)
+							$image_src = imagerotate ($image_src, $a, 0);
+						if (abs ($a) == 90) {
+							$tmp = $isx;
+							$isx = $isy;
+							$isy = $tmp;
+						}
+
+						// Build destination image
+						$image_dest = imagecreatetruecolor ($isx / $reduction, $isy / $reduction);
+						imagecopyresampled ($image_dest, $image_src, 0,0, 0,0, $isx / $reduction, $isy / $reduction, $isx, $isy);
+
+						// Convert image
+						$imgconv = 'image'.$mimetype[1]; // imagejpeg / imagepng / imagegif
+						$imgconv ($image_dest, $temporaire);
+
+						// Cleanup
+						imagedestroy ($image_dest);
+						imagedestroy ($image_src);
 					}
-
-					// Build destination image
-					$image_dest = imagecreatetruecolor ($isx / $reduction, $isy / $reduction);
-					imagecopyresampled ($image_dest, $image_src, 0,0, 0,0, $isx / $reduction, $isy / $reduction, $isx, $isy);
-
-					// Convert image
-					$imgconv = 'image'.$mimetype[1]; // imagejpeg / imagepng / imagegif
-					$imgconv ($image_dest, $temporaire);
-
-					// Cleanup
-					imagedestroy ($image_dest);
-					imagedestroy ($image_src);
+					$attachment['physical_filename'] = $temporaire;
 				}
-				$attachment['physical_filename'] = $temporaire;
 			}
 		}
 
