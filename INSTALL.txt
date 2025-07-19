@@ -36,6 +36,6 @@ Export / import sql
 
 Change /public_html_chemineur name
 
-Using your web browser, visit /install/app.php/update in your board's root
+Using your web browser, visit https://chemineur.fr/install/app.php/update in your board's root
 
 Delete the install/ directory on the server
