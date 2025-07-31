@@ -48,6 +48,7 @@ class listener implements EventSubscriberInterface
 			'core.viewtopic_modify_post_row' => 'viewtopic_modify_post_row',
 
 			// Posting
+			'core.modify_posting_parameters' => 'modify_posting_parameters',
 			'core.posting_modify_template_vars' => 'posting_modify_template_vars',
 			'core.submit_post_modify_sql_data' => 'submit_post_modify_sql_data',
 
@@ -77,6 +78,66 @@ class listener implements EventSubscriberInterface
 	*/
 	// Appelé avant la requette SQL qui récupère les données des posts
 	function viewtopic_get_post_data($vars) {
+		global $db, $user;
+
+		if (defined('GEOBB_IMPORT_WRI') && $user->data['user_id'] == 2) {
+			// Get aleady imported
+			$points_posted = [];
+			$comments_posted = [];
+
+			$sql = 'SELECT post_edit_reason FROM ' . POSTS_TABLE . "
+				WHERE post_edit_reason LIKE 'Transfert WRI%'";
+			$result = $db->sql_query($sql);
+			while ($row = $db->sql_fetchrow($result)) {
+				preg_match_all('/[0-9]+/u', $row['post_edit_reason'], $rws);
+				if(isset($rws[0][0]))
+					$points_posted[$rws[0][0]] = true;
+				if(isset($rws[0][1]))
+					$comments_posted[$rws[0][1]] = true;
+			}
+			$db->sql_freeresult($result);
+
+			// Sommets à importer
+//https://www.refuges.info/api/bbox?type_points=6&nb_points=all
+			$pls = json_decode (file_get_contents('IMPORT/points_sommet.json'));
+			foreach ($pls->features AS $v)
+				if(!isset($points_posted[$v->id])) {
+					header('Location: https://c92.fr/phpBB3/posting.php'.
+						'?mode=post'.
+						'&submit=true'.
+						'&f=24&point='.$v->id);
+					exit();
+				}
+
+			// Lacs à importer
+//https://www.refuges.info/api/bbox?type_points=16&nb_points=all
+			$pls = json_decode (file_get_contents('IMPORT/points_lacs.json'));
+			foreach ($pls->features AS $v)
+				if(!isset($points_posted[$v->id])) {
+					header('Location: https://c92.fr/phpBB3/posting.php'.
+						'?mode=post'.
+						'&submit=true'.
+						'&f=26&point='.$v->id);
+					exit();
+				}
+
+			// Commentaires à importer
+// config dom => refuges
+//https://dom.refuges.info/api/contributions?format=json&format_texte=texte&type=commentaires&nombre=2000&avec_texte=1
+// Effacer la dernière ligne
+			$cts = json_decode (file_get_contents('IMPORT/commentaires.json'));
+			foreach ($cts as $comment) {
+				if(isset($points_posted[$comment->id_point]) &&
+					!isset($comments_posted[$comment->id_commentaire])) {
+					header('Location: https://c92.fr/phpBB3/posting.php'.
+						'?comment='.$comment->id_commentaire.
+						'&submit=true'.
+						'&point='.$comment->id_point);
+					exit();
+				}
+			}
+		}
+
 		// Insère la conversion du champ geom en format geojson dans la requette SQL
 		$sql_ary = $vars['sql_ary'];
 		$sql_ary['SELECT'] .=
@@ -188,9 +249,42 @@ class listener implements EventSubscriberInterface
 	/**
 		POSTING
 	*/
+	function modify_posting_parameters($vars) {
+		global $request, $db, $user;
+
+		// Transfert WRI / ne pas importer un point 2 fois
+		if (defined('GEOBB_IMPORT_WRI') && $user->data['user_id'] == 2) {
+			$point = $request->variable('point', 0);
+			$comment = $request->variable('comment', 0);
+
+			if ($point) {
+				$sql = 'SELECT forum_id, topic_id
+					FROM ' . POSTS_TABLE . "
+					WHERE post_text LIKE '%Importation de refuges.info/point/$point%'";
+				$result = $db->sql_query($sql);
+				$row = $this->db->sql_fetchrow($result);
+				$db->sql_freeresult($result);
+
+				if ($row) {
+					if ($comment) {
+						$vars['mode'] = 'reply';
+						$vars['forum_id'] = $row['forum_id'];
+						$vars['topic_id'] = $row['topic_id'];
+					}
+					else // Topic already exists
+						redirect('https://c92.fr/phpBB3/viewtopic.php?t='.$row['topic_id']);  
+				}
+			}
+		}
+	}
+
 	// Called when displaying the page
 	function posting_modify_template_vars($vars) {
+		global $request, $db, $user, $attachment_data;
+
 		$post_data = $vars['post_data'];
+		$page_data = $vars['page_data'];
+
 		preg_match ('/([\.:])(point|line|poly)/', $post_data['forum_desc'], $params);
 
 		if ($params && (
@@ -221,10 +315,107 @@ class listener implements EventSubscriberInterface
 				$this->db->sql_freeresult($result);
 			}
 		}
+
+		if (defined('GEOBB_IMPORT_WRI') && $user->data['user_id'] == 2) {
+			// Transfert WRI commentaires
+			$id_point = $this->request->variable('point', 0);
+			$id_comment = $request->variable('comment', 0);
+
+			if($id_comment) {
+				$fa_search = __DIR__.'/../../../../files/'.$id_comment.'*.*';
+				$fa = glob($fa_search);
+				$cts = json_decode (file_get_contents('IMPORT/commentaires.json'));
+
+				// Vérification globale présence fichiers
+				/* foreach ($cts as $comment) {
+					$fa_search = __DIR__.'/../../../../files/'.$comment->id_commentaire.'*.*';
+					$fa = glob($fa_search);
+					if($comment->photo && !count($fa)) {
+						echo __LINE__."Pas de photo point=$comment->id_point, comment=$comment->id_commentaire<br/>";
+					}
+				}
+				exit;*/
+
+				// Import
+				foreach ($cts as $comment) {
+					if ($comment->id_commentaire == $id_comment) {
+						// Commentaire
+						$page_data['DRAFT_MESSAGE'] = $comment->commentaire;
+						$page_data['S_DISPLAY_USERNAME'] = true;
+						$page_data['USERNAME'] = $comment->auteur;
+						$page_data['S_EDIT_REASON'] = true;
+						$page_data['EDIT_REASON'] = "Transfert WRI $id_point#C$id_comment";
+
+						// Image attachée
+						if($comment->photo && !count($fa)) {
+							echo "Pas de photo point=$id_point, comment=$id_comment<br/>";
+							exit;
+						}
+						if(count($fa)) {
+							// Create attachment item in attachment table
+							$sql_ary = array(
+								'topic_id'			=> $post_data['topic_id'],
+								'in_message'		=> 0,
+								'poster_id'			=> 2,
+								'is_orphan'			=> 1,
+								'physical_filename'	=> basename($fa[0]),
+								'real_filename'		=> basename($fa[0]),
+								'attach_comment'	=> "Transfert WRI $id_point#C$id_comment",
+								'extension'			=> pathinfo($fa[0], PATHINFO_EXTENSION),
+								'mimetype'			=> mime_content_type ($fa[0]),
+								'filesize' 			=> filesize ($fa[0]),
+							);
+							$db->sql_query('INSERT INTO ' . ATTACHMENTS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary));
+
+							// Add it to the message
+							$attachment_data = [[
+								'attach_id'			=> $db->sql_nextid(),
+								'is_orphan'			=> 0,
+								'real_filename'		=> basename($fa[0]),
+								'attach_comment'	=> "Transfert WRI $id_point#C$id_comment",
+								'filesize'			=> filesize ($fa[0]),
+							]];
+						}
+					}
+				}
+			}
+			// Transfert WRI points
+			elseif($id_point) {
+				$fn='https://dom.refuges.info/api/point'.
+					'?format=geojson&format_texte=texte&detail=complet&id='.$id_point;
+				$fd = json_decode(file_get_contents($fn));
+				$ff = $fd->features[0];
+				$fp = $ff->properties;
+
+				$this->template->assign_var ('GEO_JSON', json_encode($ff->geometry));
+				$page_data['DRAFT_SUBJECT'] = $fp->nom;
+				$page_data['S_EDIT_REASON'] = true;
+				$page_data['EDIT_REASON'] = "Transfert WRI $id_point";
+				$page_data['DRAFT_MESSAGE'] = '';
+				$page_data['S_DISPLAY_USERNAME'] = true;
+				$page_data['USERNAME'] = $fp->createur->nom ?: 'refuges.info';
+				$props = [
+					'acces' => 'Accès',
+					'remarque' => 'Remarques',
+					'proprio' => 'Propriétaire',
+				];
+				foreach ($props AS $k => $v)
+					if(trim($fp->$k->valeur))
+						$page_data['DRAFT_MESSAGE'] .=
+							'[b]'.$props[$k].'[/b]'.PHP_EOL
+							.trim($fp->$k->valeur).PHP_EOL.PHP_EOL;
+				$page_data['DRAFT_MESSAGE'] .= 'Importation de refuges.info/point/'.$fp->id;
+			}
+		}
+
+		$vars['post_data'] = $post_data;
+		$vars['page_data'] = $page_data;
 	}
 
 	// Called when validating the data to be saved
 	function submit_post_modify_sql_data($vars) {
+		global $request, $user;
+
 		$sql_data = $vars['sql_data'];
 		$post = $this->request->get_super_global(\phpbb\request\request_interface::POST);
 
@@ -243,6 +434,15 @@ class listener implements EventSubscriberInterface
 
 		$sql_data[POSTS_TABLE]['sql']['geo_altitude'] = @$post['geo_altitude'];
 		$sql_data[POSTS_TABLE]['sql']['geo_massif'] = @$post['geo_massif'];
+
+		// Mise à jour infos au moment de la création du pst
+		if (defined('GEOBB_IMPORT_WRI') && $user->data['user_id'] == 2) {
+			$sql_data[POSTS_TABLE]['sql']['post_edit_reason'] = $request->variable('edit_reason', '', true);
+			$sql_data[POSTS_TABLE]['sql']['poster_id'] = 1;
+			$vars['username'] =
+			$sql_data[POSTS_TABLE]['sql']['post_username'] =
+				$request->variable('username', '', true);
+		}
 
 		$vars['sql_data'] = $sql_data; // Return data
 	}

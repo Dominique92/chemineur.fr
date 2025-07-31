@@ -182,7 +182,8 @@ class listener implements EventSubscriberInterface
 
 		/* Allows call posting.php without &f=forum_id */
 		if (defined('MYPHPBB_POSTING_WITHOUT_FID') &&
-			!$vars['forum_id']) {
+			!$vars['forum_id'] &&
+			($vars['topic_id'] || $vars['post_id'])) {
 			$sql = 'SELECT forum_id FROM '.POSTS_TABLE.
 				' WHERE topic_id LIKE '.$vars['topic_id'].
 				'    OR post_id  LIKE '.$vars['post_id'];
@@ -214,7 +215,8 @@ class listener implements EventSubscriberInterface
 
 		/* Prevent an empty title to invalidate the full page and input */
 		if (defined('MYPHPBB_POST_EMPTY_SUBJECT') &&
-			!$post_data['post_subject'])
+			!$post_data['post_subject'] &&
+			!@$page_data['DRAFT_SUBJECT'])
 			$page_data['DRAFT_SUBJECT'] = @$this->post_name ?: 'New';
 
 		$vars['page_data'] = $page_data;

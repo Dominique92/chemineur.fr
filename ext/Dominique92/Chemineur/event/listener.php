@@ -108,7 +108,7 @@ class listener implements EventSubscriberInterface
 			SELECT t.topic_id, topic_title,
 				t.forum_id, forum_name, forum_image,
 				topic_first_post_id, p.post_id, p.post_attachment, topic_posts_approved,
-				username, p.poster_id, p.post_time, p1.geo_massif
+				username, p.poster_id, p.post_time, p1.geo_massif, p1.post_username
 			FROM	 ".TOPICS_TABLE." AS t
 				JOIN ".FORUMS_TABLE." AS f USING (forum_id)
 				JOIN ".POSTS_TABLE ." AS p ON (p.post_id = t.topic_last_post_id)

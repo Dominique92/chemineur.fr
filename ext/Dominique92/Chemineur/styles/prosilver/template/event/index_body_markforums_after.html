@@ -30,7 +30,11 @@
 			{L_POST_BY_AUTHOR}
 			<a href="memberlist.php?mode=viewprofile&amp;u={nouvelles.POSTER_ID}"
 				title="{L_VIEWING_MEMBER_PROFILE}">
-				{nouvelles.USERNAME}
+				<!-- IF nouvelles.POST_USERNAME -->
+					{nouvelles.POST_USERNAME}
+				<!-- ELSE -->
+					{nouvelles.USERNAME}
+				<!-- ENDIF -->
 			</a>
 			{L_POSTED_ON_DATE}
 			{nouvelles.POST_TIME}
