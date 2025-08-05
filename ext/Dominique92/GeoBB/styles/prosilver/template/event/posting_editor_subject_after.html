@@ -75,12 +75,3 @@
 		</div>
 	<!-- ENDIF -->
 <!-- ENDIF -->
-
-<script>
-	const submitParam = new URLSearchParams(document.location.search).get('submit');
-
-	if(submitParam)
-		setTimeout(() => {
-			$('#postform input[type=submit]').click();
-		}, 1000)
-</script>
