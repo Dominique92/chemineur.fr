@@ -136,6 +136,7 @@ body,
 	font-weight: initial;
 	color: white;
 }
+.nouvelles span,
 .nouvelles a {
 	font-weight: bold;
 	color: yellow;
@@ -144,6 +145,7 @@ body,
     text-transform: uppercase;
 }
 @media screen and (min-width: 600px) {
+	.nouvelles span,
 	.nouvelles a {
 		text-overflow: ellipsis;
 		max-width: 45%;

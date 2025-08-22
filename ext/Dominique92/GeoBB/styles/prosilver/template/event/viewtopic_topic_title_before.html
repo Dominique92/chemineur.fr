@@ -21,3 +21,19 @@
 	<input type="hidden" id="marker-json" value='{GEO_JSON}' />
 	<p id="marker-string"></p>
 <!-- ENDIF -->
+
+<!-- IF RESERVE -->
+	<a id="auto_submit" style="background:red" href="posting.php?mode=post&f=26">sommet</a>
+	<a id="auto_submit" style="background:red" href="posting.php?mode=post&f=24">lac</a>
+<!-- ENDIF -->
+
+<!-- IF AUTO_SUBMIT_TOPIC -->
+	<a id="auto_submit" style="background:red;color:white" href="posting.php?mode=reply&t={AUTO_SUBMIT_TOPIC}&point_wri={AUTO_SUBMIT_POINT}&comment_wri={AUTO_SUBMIT_COMMENT}">SUBMIT_IMPORT {COMMENTS_TO_POST}</a>
+
+	<script>
+	if(0)
+		setTimeout(() => {
+			$('#auto_submit')[0].click();
+		}, 25000 * Math.random())
+	</script>
+<!-- ENDIF -->

@@ -28,14 +28,22 @@
 				dans <a href="viewforum.php?f={nouvelles.FORUM_ID}" title="{L_FORUM_INDEX}">{nouvelles.FORUM_NAME}</a>
 			<!-- ENDIF -->
 			{L_POST_BY_AUTHOR}
-			<a href="memberlist.php?mode=viewprofile&amp;u={nouvelles.POSTER_ID}"
-				title="{L_VIEWING_MEMBER_PROFILE}">
+			<!-- IF nouvelles.POSTER_ID > 1 -->
+				<a href="memberlist.php?mode=viewprofile&amp;u={nouvelles.POSTER_ID}"
+					title="{L_VIEWING_MEMBER_PROFILE}">
+			<!-- ELSE -->
+				<span title="Utilisateur non enregistré">
+			<!-- ENDIF -->
 				<!-- IF nouvelles.POST_USERNAME -->
 					{nouvelles.POST_USERNAME}
 				<!-- ELSE -->
 					{nouvelles.USERNAME}
 				<!-- ENDIF -->
-			</a>
+			<!-- IF nouvelles.POSTER_ID > 1 -->
+				</a>
+			<!-- ELSE -->
+				</span>
+			<!-- ENDIF -->
 			{L_POSTED_ON_DATE}
 			{nouvelles.POST_TIME}
 		</li>
